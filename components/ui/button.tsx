@@ -10,11 +10,11 @@ const variantStyles = {
   primary:
     "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-600",
   secondary:
-    "border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 focus-visible:ring-zinc-500",
+    "border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 focus-visible:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800",
   danger:
     "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600",
   ghost:
-    "bg-transparent text-zinc-700 hover:bg-zinc-100 focus-visible:ring-zinc-500",
+    "bg-transparent text-zinc-700 hover:bg-zinc-100 focus-visible:ring-zinc-500 dark:text-zinc-300 dark:hover:bg-zinc-800",
 } as const;
 
 const sizeStyles = {
