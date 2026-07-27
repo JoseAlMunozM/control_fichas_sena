@@ -28,10 +28,16 @@ export function ConfirmDialog({
   onConfirm,
   title,
 }: ConfirmDialogProps) {
+  const handleCancel = () => {
+    if (!isLoading) {
+      onCancel();
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onCancel}
+      onClose={handleCancel}
       title={title}
       size="sm"
       closeOnBackdrop={!isLoading}
@@ -40,7 +46,7 @@ export function ConfirmDialog({
         <div className="flex justify-end gap-3">
           <Button
             variant="secondary"
-            onClick={onCancel}
+            onClick={handleCancel}
             disabled={isLoading}
           >
             {cancelLabel}

@@ -20,13 +20,19 @@ export function Pagination({
   siblingCount = 1,
   totalPages,
 }: PaginationProps) {
-  if (totalPages <= 1) {
+  const safeTotalPages = Math.max(0, Math.trunc(totalPages));
+
+  if (safeTotalPages <= 1) {
     return null;
   }
 
+  const safeCurrentPage = Math.min(
+    Math.max(1, Math.trunc(currentPage)),
+    safeTotalPages,
+  );
   const items = getPaginationItems(
-    currentPage,
-    totalPages,
+    safeCurrentPage,
+    safeTotalPages,
     siblingCount,
   );
 
@@ -35,8 +41,8 @@ export function Pagination({
       <Button
         variant="secondary"
         size="sm"
-        disabled={disabled || currentPage <= 1}
-        onClick={() => onPageChange(currentPage - 1)}
+        disabled={disabled || safeCurrentPage <= 1}
+        onClick={() => onPageChange(safeCurrentPage - 1)}
       >
         Anterior
       </Button>
@@ -45,10 +51,10 @@ export function Pagination({
         typeof item === "number" ? (
           <Button
             key={item}
-            variant={item === currentPage ? "primary" : "secondary"}
+            variant={item === safeCurrentPage ? "primary" : "secondary"}
             size="sm"
             disabled={disabled}
-            aria-current={item === currentPage ? "page" : undefined}
+            aria-current={item === safeCurrentPage ? "page" : undefined}
             aria-label={`Página ${item}`}
             className="min-w-8 px-2"
             onClick={() => onPageChange(item)}
@@ -69,8 +75,8 @@ export function Pagination({
       <Button
         variant="secondary"
         size="sm"
-        disabled={disabled || currentPage >= totalPages}
-        onClick={() => onPageChange(currentPage + 1)}
+        disabled={disabled || safeCurrentPage >= safeTotalPages}
+        onClick={() => onPageChange(safeCurrentPage + 1)}
       >
         Siguiente
       </Button>
