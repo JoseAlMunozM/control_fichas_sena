@@ -2,8 +2,16 @@
 
 import { useState, type ReactNode } from "react";
 
-import { MAIN_NAVIGATION } from "@/constants";
-import type { NavigationItem } from "@/types";
+import {
+  NAVIGATION_MENUS,
+  ROUTE_CONFIG,
+} from "@/constants";
+import type {
+  AppRouteConfig,
+  NavigationMenuConfig,
+  UserRole,
+} from "@/types";
+import { createNavigationMenus } from "@/utils";
 
 import { Breadcrumb } from "./breadcrumb";
 import { Footer } from "./footer";
@@ -12,14 +20,23 @@ import { Sidebar } from "./sidebar";
 
 export interface AppShellProps {
   children: ReactNode;
-  navigationItems?: readonly NavigationItem[];
+  currentUserRole?: UserRole;
+  menuConfig?: readonly NavigationMenuConfig[];
+  routes?: readonly AppRouteConfig[];
 }
 
 export function AppShell({
   children,
-  navigationItems = MAIN_NAVIGATION,
+  currentUserRole,
+  menuConfig = NAVIGATION_MENUS,
+  routes = ROUTE_CONFIG,
 }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigationMenus = createNavigationMenus(
+    routes,
+    menuConfig,
+    currentUserRole,
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -32,7 +49,7 @@ export function AppShell({
 
       <Sidebar
         isOpen={isSidebarOpen}
-        items={navigationItems}
+        menus={navigationMenus}
         onClose={() => setIsSidebarOpen(false)}
       />
 
@@ -44,7 +61,7 @@ export function AppShell({
             className="mx-auto w-full max-w-screen-2xl flex-1 px-4 py-6 sm:px-6 lg:px-8"
             id="main-content"
           >
-            <Breadcrumb />
+            <Breadcrumb routes={routes} />
             {children}
           </main>
           <Footer />

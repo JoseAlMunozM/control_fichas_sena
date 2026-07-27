@@ -4,29 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { APP_NAME } from "@/constants";
-import type { NavigationItem } from "@/types";
+import type { NavigationMenu } from "@/types";
 import { Button } from "@/components/ui";
-import { cn } from "@/utils";
+import { cn, matchesRoute } from "@/utils";
 
 import { CloseIcon } from "./icons";
 
 export interface SidebarProps {
   isOpen: boolean;
-  items: readonly NavigationItem[];
+  menus: readonly NavigationMenu[];
   onClose: () => void;
-}
-
-function isCurrentRoute(pathname: string, item: NavigationItem) {
-  if (item.exact || item.href === "/") {
-    return pathname === item.href;
-  }
-
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
 export function Sidebar({
   isOpen,
-  items,
+  menus,
   onClose,
 }: SidebarProps) {
   const pathname = usePathname();
@@ -75,42 +67,46 @@ export function Sidebar({
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-5">
-          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            Navegación
-          </p>
-          <ul className="space-y-1">
-            {items.map((item) => {
-              const isActive = isCurrentRoute(pathname, item);
+        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
+          {menus.map((menu) => (
+            <div key={menu.id}>
+              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                {menu.label}
+              </p>
+              <ul className="space-y-1">
+                {menu.items.map((item) => {
+                  const isActive = matchesRoute(pathname, item);
 
-              return (
-                <li key={item.href}>
-                  <Link
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
-                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100",
-                    )}
-                    href={item.href}
-                    onClick={onClose}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "size-2 rounded-full",
-                        isActive
-                          ? "bg-emerald-600 dark:bg-emerald-400"
-                          : "bg-zinc-300 dark:bg-zinc-700",
-                      )}
-                    />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                  return (
+                    <li key={item.path}>
+                      <Link
+                        aria-current={isActive ? "page" : undefined}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100",
+                        )}
+                        href={item.path}
+                        onClick={onClose}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "size-2 rounded-full",
+                            isActive
+                              ? "bg-emerald-600 dark:bg-emerald-400"
+                              : "bg-zinc-300 dark:bg-zinc-700",
+                          )}
+                        />
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
       </aside>
     </>

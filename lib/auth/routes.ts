@@ -1,32 +1,30 @@
 import {
   AUTH_ROUTES,
-  PUBLIC_ROUTES,
-  USER_ROLE,
+  ROUTE_CONFIG,
 } from "@/constants";
-import type { RoleRouteRule, UserRole } from "@/types";
-
-const ROLE_ROUTE_RULES: readonly RoleRouteRule[] = [
-  {
-    pathPrefix: "/admin",
-    roles: [USER_ROLE.ADMIN],
-  },
-];
+import type { UserRole } from "@/types";
+import { findRouteConfig } from "@/utils";
 
 export function isPublicRoute(pathname: string): boolean {
+  const isAuthRoute =
+    pathname === AUTH_ROUTES.apiPrefix ||
+    pathname.startsWith(`${AUTH_ROUTES.apiPrefix}/`);
+
+  if (isAuthRoute) {
+    return true;
+  }
+
   return (
-    pathname.startsWith(AUTH_ROUTES.apiPrefix) ||
-    PUBLIC_ROUTES.some((route) => route === pathname)
+    findRouteConfig(pathname, ROUTE_CONFIG)?.access === "public"
   );
+}
+
+export function isProtectedRoute(pathname: string): boolean {
+  return !isPublicRoute(pathname);
 }
 
 export function getAllowedRoles(
   pathname: string,
 ): readonly UserRole[] | null {
-  const rule = ROLE_ROUTE_RULES.find(
-    ({ pathPrefix }) =>
-      pathname === pathPrefix ||
-      pathname.startsWith(`${pathPrefix}/`),
-  );
-
-  return rule?.roles ?? null;
+  return findRouteConfig(pathname, ROUTE_CONFIG)?.roles ?? null;
 }

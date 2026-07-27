@@ -1,3 +1,5 @@
+import { ROUTE_PATHS } from "./routes";
+
 export const USER_ROLE = {
   ADMIN: "ADMIN",
   COORDINATOR: "COORDINATOR",
@@ -10,7 +12,5 @@ export const DEFAULT_USER_ROLE = USER_ROLE.USER;
 export const AUTH_ROUTES = {
   apiPrefix: "/api/auth",
   signIn: "/api/auth/signin",
-  afterSignIn: "/dashboard",
+  afterSignIn: ROUTE_PATHS.dashboard,
 } as const;
-
-export const PUBLIC_ROUTES = ["/"] as const;

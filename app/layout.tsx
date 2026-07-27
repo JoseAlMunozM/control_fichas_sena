@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppShell, ThemeScript } from "@/components/layout";
 import { APP_NAME } from "@/constants";
+import { auth } from "@/lib/auth";
 
 import "./globals.css";
 
@@ -24,11 +25,13 @@ export const metadata: Metadata = {
   description: "Sistema de control y seguimiento de fichas SENA.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html
       lang="es"
@@ -39,7 +42,9 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="min-h-full">
-        <AppShell>{children}</AppShell>
+        <AppShell currentUserRole={session?.user.role}>
+          {children}
+        </AppShell>
       </body>
     </html>
   );
