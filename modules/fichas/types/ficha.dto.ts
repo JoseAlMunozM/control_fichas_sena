@@ -1,6 +1,7 @@
 import type {
   FichaEntity,
   FichaSeguimientoEntity,
+  NovedadCompetenciaEntity,
   ProgramacionCompetenciaEntity,
 } from "./ficha.entity";
 
@@ -16,9 +17,19 @@ export type ProgramacionCompetenciaDto = Omit<
 
 export type FichaSeguimientoDto = Omit<
   FichaSeguimientoEntity,
-  "programaciones"
+  "programaciones" | "novedades"
 > & {
   programaciones: readonly ProgramacionCompetenciaDto[];
+  novedades: readonly NovedadCompetenciaDto[];
+};
+
+export type NovedadCompetenciaDto = Omit<
+  NovedadCompetenciaEntity,
+  "fecha" | "createdAt" | "updatedAt"
+> & {
+  fecha: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type FichaDto = Omit<

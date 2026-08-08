@@ -24,6 +24,13 @@ export type DiaSemana =
   | "SABADO"
   | "DOMINGO";
 
+export type NovedadCompetenciaTipo =
+  | "OBSERVACION"
+  | "REPROGRAMACION"
+  | "CAMBIO_INSTRUCTOR"
+  | "SUSPENSION"
+  | "OTRA";
+
 export interface FichaSeguimientoEntity {
   id: string;
   competenciaId: string;
@@ -34,6 +41,18 @@ export interface FichaSeguimientoEntity {
   orden: number;
   estado: SeguimientoCompetenciaEstado;
   programaciones: ProgramacionCompetenciaEntity[];
+  novedades: NovedadCompetenciaEntity[];
+}
+
+export interface NovedadCompetenciaEntity {
+  id: string;
+  fecha: Date;
+  tipo: NovedadCompetenciaTipo;
+  descripcion: string;
+  registradoPorId: string;
+  registradoPorNombre: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ProgramacionBloqueEntity {

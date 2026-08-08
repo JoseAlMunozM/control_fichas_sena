@@ -9,6 +9,7 @@ export type FichaActionErrorCode =
   | "INVALID_SCHEDULE"
   | "SCHEDULE_CONFLICT"
   | "HOURS_EXCEEDED"
+  | "ACTIVITY_NOT_FOUND"
   | "NOT_FOUND"
   | "INTERNAL_ERROR";
 

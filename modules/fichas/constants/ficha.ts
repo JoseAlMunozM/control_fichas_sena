@@ -1,6 +1,7 @@
 import type {
   DiaSemana,
   FichaEstado,
+  NovedadCompetenciaTipo,
   SeguimientoCompetenciaEstado,
 } from "../types";
 
@@ -72,4 +73,24 @@ export const FICHA_FIELD_LIMITS = {
   sede: 150,
   modalidad: 100,
   observaciones: 1000,
+} as const;
+
+export const NOVEDAD_COMPETENCIA_TIPO = {
+  OBSERVACION: "OBSERVACION",
+  REPROGRAMACION: "REPROGRAMACION",
+  CAMBIO_INSTRUCTOR: "CAMBIO_INSTRUCTOR",
+  SUSPENSION: "SUSPENSION",
+  OTRA: "OTRA",
+} as const satisfies Record<string, NovedadCompetenciaTipo>;
+
+export const NOVEDAD_COMPETENCIA_TIPO_LABELS = {
+  [NOVEDAD_COMPETENCIA_TIPO.OBSERVACION]: "Observación",
+  [NOVEDAD_COMPETENCIA_TIPO.REPROGRAMACION]: "Reprogramación",
+  [NOVEDAD_COMPETENCIA_TIPO.CAMBIO_INSTRUCTOR]: "Cambio de instructor",
+  [NOVEDAD_COMPETENCIA_TIPO.SUSPENSION]: "Suspensión",
+  [NOVEDAD_COMPETENCIA_TIPO.OTRA]: "Otra",
+} as const satisfies Record<NovedadCompetenciaTipo, string>;
+
+export const NOVEDAD_FIELD_LIMITS = {
+  descripcion: 1000,
 } as const;

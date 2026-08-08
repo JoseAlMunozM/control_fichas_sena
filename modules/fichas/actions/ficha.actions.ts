@@ -17,16 +17,27 @@ import type {
   FichasResponse,
 } from "../types";
 import {
+  createNovedadCompetenciaSchema,
   createProgramacionSchema,
   createFichaSchema,
   fichaFiltersSchema,
   fichaIdSchema,
+  novedadIdSchema,
   programacionIdSchema,
   seguimientoIdSchema,
+  updateFichaSchema,
+  updateNovedadCompetenciaSchema,
   updateProgramacionSchema,
   updateSeguimientoEstadoSchema,
-  updateFichaSchema,
 } from "../validators";
+
+function getLeaderIdentity(session: Session) {
+  return {
+    id: session.user.id,
+    nombre:
+      session.user.name ?? session.user.email ?? "Instructor líder",
+  };
+}
 
 function mapActionError(error: unknown): FichaActionError {
   if (error instanceof z.ZodError) {
@@ -79,13 +90,10 @@ export async function createFichaAction(
 ): Promise<FichaActionResult<FichaResponse>> {
   return executeFichaAction(async (session) => {
     const data = createFichaSchema.parse(input);
-    const response = await fichaService.create(data, {
-      id: session.user.id,
-      nombre:
-        session.user.name ??
-        session.user.email ??
-        "Instructor líder",
-    });
+    const response = await fichaService.create(
+      data,
+      getLeaderIdentity(session),
+    );
 
     revalidateFichaPaths(response.data.id);
 
@@ -134,13 +142,7 @@ export async function createProgramacionAction(
       fichaId,
       seguimientoId,
       data,
-      {
-        id: session.user.id,
-        nombre:
-          session.user.name ??
-          session.user.email ??
-          "Instructor líder",
-      },
+      getLeaderIdentity(session),
     );
 
     revalidateFichaPaths(fichaId);
@@ -207,6 +209,73 @@ export async function updateSeguimientoEstadoAction(
       fichaId,
       seguimientoId,
       data,
+    );
+
+    revalidateFichaPaths(fichaId);
+
+    return response;
+  });
+}
+
+export async function createNovedadAction(
+  fichaIdInput: unknown,
+  seguimientoIdInput: unknown,
+  dataInput: unknown,
+): Promise<FichaActionResult<FichaResponse>> {
+  return executeFichaAction(async (session) => {
+    const fichaId = fichaIdSchema.parse(fichaIdInput);
+    const seguimientoId = seguimientoIdSchema.parse(seguimientoIdInput);
+    const data = createNovedadCompetenciaSchema.parse(dataInput);
+    const response = await fichaService.createNovedad(
+      fichaId,
+      seguimientoId,
+      data,
+      getLeaderIdentity(session),
+    );
+
+    revalidateFichaPaths(fichaId);
+
+    return response;
+  });
+}
+
+export async function updateNovedadAction(
+  fichaIdInput: unknown,
+  seguimientoIdInput: unknown,
+  novedadIdInput: unknown,
+  dataInput: unknown,
+): Promise<FichaActionResult<FichaResponse>> {
+  return executeFichaAction(async () => {
+    const fichaId = fichaIdSchema.parse(fichaIdInput);
+    const seguimientoId = seguimientoIdSchema.parse(seguimientoIdInput);
+    const novedadId = novedadIdSchema.parse(novedadIdInput);
+    const data = updateNovedadCompetenciaSchema.parse(dataInput);
+    const response = await fichaService.updateNovedad(
+      fichaId,
+      seguimientoId,
+      novedadId,
+      data,
+    );
+
+    revalidateFichaPaths(fichaId);
+
+    return response;
+  });
+}
+
+export async function deleteNovedadAction(
+  fichaIdInput: unknown,
+  seguimientoIdInput: unknown,
+  novedadIdInput: unknown,
+): Promise<FichaActionResult<FichaResponse>> {
+  return executeFichaAction(async () => {
+    const fichaId = fichaIdSchema.parse(fichaIdInput);
+    const seguimientoId = seguimientoIdSchema.parse(seguimientoIdInput);
+    const novedadId = novedadIdSchema.parse(novedadIdInput);
+    const response = await fichaService.deleteNovedad(
+      fichaId,
+      seguimientoId,
+      novedadId,
     );
 
     revalidateFichaPaths(fichaId);

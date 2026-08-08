@@ -4,3 +4,4 @@ export * from "./ficha-table";
 export * from "./fichas-page-content";
 export * from "./programacion-form";
 export * from "./programacion-manager-modal";
+export * from "./novedad-section";

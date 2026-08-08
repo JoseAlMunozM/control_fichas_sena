@@ -14,6 +14,7 @@ import { programaService } from "@/modules/programas/services";
 import { FICHA_ESTADO, SEGUIMIENTO_ESTADO } from "../constants";
 import type {
   CreateFichaDto,
+  CreateNovedadCompetenciaDto,
   CreateProgramacionDto,
   FichaActionErrorCode,
   FichaDto,
@@ -22,18 +23,22 @@ import type {
   FichaResponse,
   FichaSeguimientoEntity,
   FichasResponse,
+  NovedadCompetenciaEntity,
   ProgramacionCompetenciaEntity,
   SeguimientoCompetenciaEstado,
   UpdateFichaDto,
+  UpdateNovedadCompetenciaDto,
   UpdateProgramacionDto,
   UpdateSeguimientoEstadoDto,
 } from "../types";
 import {
-  createProgramacionSchema,
+  createNovedadCompetenciaSchema,
   createFichaSchema,
+  createProgramacionSchema,
+  updateFichaSchema,
+  updateNovedadCompetenciaSchema,
   updateProgramacionSchema,
   updateSeguimientoEstadoSchema,
-  updateFichaSchema,
 } from "../validators";
 import {
   calculateProgrammedHours,
@@ -51,6 +56,13 @@ const globalForFichaStore = globalThis as unknown as {
 
 function getFichaStore(): FichaEntity[] {
   globalForFichaStore.fichaStore ??= [];
+
+  globalForFichaStore.fichaStore.forEach((ficha) => {
+    ficha.seguimientos.forEach((seguimiento) => {
+      seguimiento.programaciones ??= [];
+      seguimiento.novedades ??= [];
+    });
+  });
 
   return globalForFichaStore.fichaStore;
 }
@@ -155,6 +167,7 @@ export class FichaService {
         orden: competencia.orden,
         estado: SEGUIMIENTO_ESTADO.PENDIENTE,
         programaciones: [],
+        novedades: [],
       })),
       createdAt: now,
       updatedAt: now,
@@ -250,18 +263,22 @@ export class FichaService {
       programacionId,
     );
     const instructor = instructorResponse.data;
+    const proposedProgramming: ProgramacionCompetenciaEntity = {
+      ...programacion,
+      instructorId: instructor.id,
+      instructorNombre: instructor.nombre,
+      instructorCorreo: instructor.correo,
+      fechaInicio: this.parseDate(data.fechaInicio),
+      fechaFin: this.parseDate(data.fechaFin),
+      bloques: data.bloques.map((bloque) => ({
+        id: randomUUID(),
+        ...bloque,
+      })),
+      horasProgramadas,
+      updatedAt: new Date(),
+    };
 
-    programacion.instructorId = instructor.id;
-    programacion.instructorNombre = instructor.nombre;
-    programacion.instructorCorreo = instructor.correo;
-    programacion.fechaInicio = this.parseDate(data.fechaInicio);
-    programacion.fechaFin = this.parseDate(data.fechaFin);
-    programacion.bloques = data.bloques.map((bloque) => ({
-      id: randomUUID(),
-      ...bloque,
-    }));
-    programacion.horasProgramadas = horasProgramadas;
-    programacion.updatedAt = new Date();
+    Object.assign(programacion, proposedProgramming);
     ficha.updatedAt = programacion.updatedAt;
 
     return { data: this.toDto(ficha) };
@@ -309,7 +326,6 @@ export class FichaService {
       (total, programacion) => total + programacion.horasProgramadas,
       0,
     );
-
     this.validateFollowupStatus(
       data.estado,
       seguimiento.programaciones.length,
@@ -318,6 +334,80 @@ export class FichaService {
     );
 
     seguimiento.estado = data.estado;
+    ficha.updatedAt = new Date();
+
+    return { data: this.toDto(ficha) };
+  }
+
+  async createNovedad(
+    fichaId: string,
+    seguimientoId: string,
+    input: CreateNovedadCompetenciaDto,
+    leader: FichaLeaderIdentity,
+  ): Promise<FichaResponse> {
+    const data = createNovedadCompetenciaSchema.parse(input);
+    const ficha = this.requireFicha(fichaId);
+    const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
+
+    this.validateActivityDate(ficha, data.fecha);
+
+    const now = new Date();
+    seguimiento.novedades.push({
+      id: randomUUID(),
+      fecha: this.parseDate(data.fecha),
+      tipo: data.tipo,
+      descripcion: data.descripcion,
+      registradoPorId: leader.id,
+      registradoPorNombre: leader.nombre,
+      createdAt: now,
+      updatedAt: now,
+    });
+    ficha.updatedAt = now;
+
+    return { data: this.toDto(ficha) };
+  }
+
+  async updateNovedad(
+    fichaId: string,
+    seguimientoId: string,
+    novedadId: string,
+    input: UpdateNovedadCompetenciaDto,
+  ): Promise<FichaResponse> {
+    const data = updateNovedadCompetenciaSchema.parse(input);
+    const ficha = this.requireFicha(fichaId);
+    const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
+    const novedad = this.requireNovelty(seguimiento, novedadId);
+
+    this.validateActivityDate(ficha, data.fecha);
+
+    novedad.fecha = this.parseDate(data.fecha);
+    novedad.tipo = data.tipo;
+    novedad.descripcion = data.descripcion;
+    novedad.updatedAt = new Date();
+    ficha.updatedAt = novedad.updatedAt;
+
+    return { data: this.toDto(ficha) };
+  }
+
+  async deleteNovedad(
+    fichaId: string,
+    seguimientoId: string,
+    novedadId: string,
+  ): Promise<FichaResponse> {
+    const ficha = this.requireFicha(fichaId);
+    const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
+    const index = seguimiento.novedades.findIndex(
+      (novedad) => novedad.id === novedadId,
+    );
+
+    if (index < 0) {
+      throw new FichaServiceError(
+        "ACTIVITY_NOT_FOUND",
+        "La novedad solicitada no existe.",
+      );
+    }
+
+    seguimiento.novedades.splice(index, 1);
     ficha.updatedAt = new Date();
 
     return { data: this.toDto(ficha) };
@@ -436,6 +526,36 @@ export class FichaService {
     }
 
     return programacion;
+  }
+
+  private requireNovelty(
+    seguimiento: FichaSeguimientoEntity,
+    novedadId: string,
+  ): NovedadCompetenciaEntity {
+    const novedad = seguimiento.novedades.find(
+      (item) => item.id === novedadId,
+    );
+
+    if (!novedad) {
+      throw new FichaServiceError(
+        "ACTIVITY_NOT_FOUND",
+        "La novedad solicitada no existe.",
+      );
+    }
+
+    return novedad;
+  }
+
+  private validateActivityDate(ficha: FichaEntity, date: string): void {
+    if (
+      date < this.formatDate(ficha.fechaInicio) ||
+      date > this.formatDate(ficha.fechaFinPractica)
+    ) {
+      throw new FichaServiceError(
+        "INVALID_SCHEDULE",
+        "La fecha debe estar dentro del periodo de la ficha.",
+      );
+    }
   }
 
   private validateProgramming(
@@ -701,6 +821,12 @@ export class FichaService {
           fechaFin: this.formatDate(programacion.fechaFin),
           createdAt: programacion.createdAt.toISOString(),
           updatedAt: programacion.updatedAt.toISOString(),
+        })),
+        novedades: seguimiento.novedades.map((novedad) => ({
+          ...novedad,
+          fecha: this.formatDate(novedad.fecha),
+          createdAt: novedad.createdAt.toISOString(),
+          updatedAt: novedad.updatedAt.toISOString(),
         })),
       })),
       fechaInicio: this.formatDate(ficha.fechaInicio),

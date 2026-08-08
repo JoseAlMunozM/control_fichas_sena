@@ -30,6 +30,7 @@ import {
   ProgramacionForm,
   type ProgramacionFormValue,
 } from "./programacion-form";
+import { NovedadSection } from "./novedad-section";
 
 export interface ProgramacionManagerModalProps {
   ficha: FichaDto;
@@ -260,7 +261,7 @@ export function ProgramacionManagerModal({
               value={seguimiento.estado}
             />
             <div className="text-sm">
-              <p className="text-zinc-500">Horas programadas</p>
+              <p className="text-zinc-500">Programadas / plan</p>
               <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                 {totalProgrammedHours} / {seguimiento.horasPlan} h
               </p>
@@ -354,6 +355,12 @@ export function ProgramacionManagerModal({
               ))}
             </div>
           )}
+
+          <NovedadSection
+            ficha={ficha}
+            onFichaChange={onFichaChange}
+            seguimiento={seguimiento}
+          />
         </div>
       )}
     </Modal>

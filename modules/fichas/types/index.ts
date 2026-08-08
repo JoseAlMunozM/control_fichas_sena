@@ -4,5 +4,6 @@ export * from "./ficha.dto";
 export * from "./ficha.entity";
 export * from "./ficha-filters";
 export * from "./ficha-response";
+export * from "./novedad.dto";
 export * from "./programacion.dto";
 export * from "./update-ficha.dto";

@@ -113,8 +113,17 @@ export function FichaDetail({
           (total, programacion) => total + programacion.horasProgramadas,
           0,
         );
-
-        return `${programmedHours} / ${seguimiento.horasPlan}`;
+        return (
+          <div>
+            <p className="font-medium text-zinc-900 dark:text-zinc-100">
+              {programmedHours} h programadas
+            </p>
+            <p className="text-xs text-zinc-500">
+              {Math.max(0, seguimiento.horasPlan - programmedHours)} pendientes
+              {" · "}{seguimiento.horasPlan} del plan
+            </p>
+          </div>
+        );
       },
     },
     {
