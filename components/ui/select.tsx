@@ -45,7 +45,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label ? (
           <label
             htmlFor={selectId}
-            className="mb-1.5 block text-sm font-medium text-zinc-700"
+            className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
           >
             {label}
           </label>
@@ -57,10 +57,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           aria-describedby={descriptionId}
           aria-invalid={Boolean(error)}
           className={cn(
-            "h-10 w-full rounded-lg border bg-white px-3 text-sm text-zinc-900 outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500",
+            "h-10 w-full rounded-lg border bg-white px-3 text-sm text-zinc-900 outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500 dark:bg-zinc-950 dark:text-zinc-100 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-500",
             error
-              ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-              : "border-zinc-300 focus:border-emerald-600 focus:ring-emerald-100",
+              ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-950"
+              : "border-zinc-300 focus:border-emerald-600 focus:ring-emerald-100 dark:border-zinc-700 dark:focus:border-emerald-500 dark:focus:ring-emerald-950",
             className,
           )}
           {...props}
@@ -86,7 +86,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             id={descriptionId}
             className={cn(
               "mt-1.5 text-xs",
-              error ? "text-red-600" : "text-zinc-500",
+              error
+                ? "text-red-600 dark:text-red-400"
+                : "text-zinc-500 dark:text-zinc-400",
             )}
           >
             {error ?? helperText}

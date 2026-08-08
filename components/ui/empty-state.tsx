@@ -21,12 +21,12 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-12 text-center",
+        "flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-12 text-center dark:border-zinc-700 dark:bg-zinc-900",
         className,
       )}
       {...props}
     >
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-zinc-200 text-zinc-500">
+      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-zinc-200 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
         {icon ?? (
           <svg
             aria-hidden="true"
@@ -48,9 +48,9 @@ export function EmptyState({
           </svg>
         )}
       </div>
-      <h3 className="font-semibold text-zinc-900">{title}</h3>
+      <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
       {description ? (
-        <p className="mt-2 max-w-md text-sm text-zinc-500">{description}</p>
+        <p className="mt-2 max-w-md text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
       ) : null}
       {action ? <div className="mt-5">{action}</div> : null}
     </div>

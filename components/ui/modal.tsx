@@ -77,9 +77,9 @@ export function Modal({
         }
       }}
     >
-      <div className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="flex items-center justify-between gap-4 border-b border-zinc-200 px-5 py-4">
-          <h2 id={titleId} className="text-lg font-semibold text-zinc-900">
+      <div className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900">
+        <div className="flex items-center justify-between gap-4 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+          <h2 id={titleId} className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             {title}
           </h2>
           {showCloseButton ? (
@@ -87,7 +87,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Cerrar modal"
-              className="flex size-8 items-center justify-center rounded-lg text-xl text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+              className="flex size-8 items-center justify-center rounded-lg text-xl text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
             >
               <span aria-hidden="true">&times;</span>
             </button>
@@ -97,7 +97,7 @@ export function Modal({
         <div className="overflow-y-auto px-5 py-4">{children}</div>
 
         {footer ? (
-          <div className="border-t border-zinc-200 bg-zinc-50 px-5 py-4">
+          <div className="border-t border-zinc-200 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950/50">
             {footer}
           </div>
         ) : null}

@@ -13,7 +13,7 @@ export function createDevelopmentSession(): Session {
   return {
     user: {
       id: "development-preview",
-      name: "Vista previa local",
+      name: "Jose Muñoz",
       email: null,
       image: null,
       role: USER_ROLE.ADMIN,

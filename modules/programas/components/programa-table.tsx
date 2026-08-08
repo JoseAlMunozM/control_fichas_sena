@@ -32,6 +32,8 @@ export function ProgramaTable({
     {
       id: "codigo",
       header: "Código",
+      headerClassName: "w-24",
+      cellClassName: "w-24 whitespace-nowrap",
       render: (programa) => (
         <span className="font-medium text-zinc-900 dark:text-zinc-100">
           {programa.codigo}
@@ -41,29 +43,37 @@ export function ProgramaTable({
     {
       id: "nombre",
       header: "Nombre",
+      headerClassName: "w-64",
+      cellClassName: "w-64 whitespace-normal",
       render: (programa) => programa.nombre,
     },
     {
       id: "descripcion",
       header: "Descripción",
-      cellClassName: "max-w-md whitespace-normal",
-      render: (programa) =>
-        programa.descripcion || (
-          <span className="text-zinc-400">Sin descripción</span>
-        ),
+      headerClassName: "w-[26rem]",
+      cellClassName: "w-[26rem] whitespace-normal",
+      render: (programa) => (
+        <p className="break-words leading-5">
+          {programa.descripcion || (
+            <span className="text-zinc-400">Sin descripción</span>
+          )}
+        </p>
+      ),
     },
     {
       id: "plan",
       header: "Plan activo",
+      headerClassName: "w-60",
+      cellClassName: "w-60 whitespace-normal",
       render: (programa) => {
         const activePlan = programa.planes.find((plan) => plan.estado);
 
         return activePlan ? (
-          <div>
+          <div className="space-y-1">
             <p className="font-medium text-zinc-900 dark:text-zinc-100">
               {activePlan.version}
             </p>
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs leading-4 text-zinc-500 dark:text-zinc-400">
               {activePlan.competencias.length} competencias · {activePlan.totalHoras} horas
             </p>
           </div>
@@ -75,6 +85,8 @@ export function ProgramaTable({
     {
       id: "estado",
       header: "Estado",
+      headerClassName: "w-28",
+      cellClassName: "w-28 whitespace-nowrap",
       render: (programa) => (
         <Badge variant={programa.estado ? "success" : "neutral"}>
           {programa.estado ? "Activo" : "Inactivo"}
@@ -86,15 +98,15 @@ export function ProgramaTable({
           {
             id: "actions",
             header: "Acciones",
-            headerClassName: "text-right",
-            cellClassName: "text-right",
+            headerClassName: "w-[22rem] text-right",
+            cellClassName: "w-[22rem] whitespace-nowrap text-right",
             render: (programa: ProgramaDto) => (
               <div className="flex justify-end gap-2">
                 <Link
                   className="inline-flex h-8 items-center justify-center rounded-lg px-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
                   href={`/programas/${programa.id}`}
                 >
-                  Administrar plan
+                  Plan y competencias
                 </Link>
                 {onEdit ? (
                   <Button
@@ -135,6 +147,7 @@ export function ProgramaTable({
       columns={columns}
       data={programas}
       getRowKey={(programa) => programa.id}
+      tableClassName="min-w-[1450px] table-fixed"
     />
   );
 }
