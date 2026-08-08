@@ -13,6 +13,7 @@ import { programaService } from "@/modules/programas/services";
 
 import { FICHA_ESTADO, SEGUIMIENTO_ESTADO } from "../constants";
 import type {
+  ChangeFichaLeaderDto,
   CreateFichaDto,
   CreateNovedadCompetenciaDto,
   CreateProgramacionDto,
@@ -32,6 +33,7 @@ import type {
   UpdateSeguimientoEstadoDto,
 } from "../types";
 import {
+  changeFichaLeaderSchema,
   createNovedadCompetenciaSchema,
   createFichaSchema,
   createProgramacionSchema,
@@ -48,6 +50,7 @@ import {
 export interface FichaLeaderIdentity {
   id: string;
   nombre: string;
+  correo?: string | null;
 }
 
 const globalForFichaStore = globalThis as unknown as {
@@ -62,6 +65,20 @@ function getFichaStore(): FichaEntity[] {
       seguimiento.programaciones ??= [];
       seguimiento.novedades ??= [];
     });
+    ficha.liderHistorial ??= [
+      {
+        id: randomUUID(),
+        instructorId: ficha.instructorLiderId,
+        instructorNombre: ficha.instructorLiderNombre,
+        instructorCorreo: null,
+        fechaInicio: new Date(ficha.fechaInicio),
+        fechaFin: null,
+        motivo: "Asignación inicial",
+        asignadoPorId: ficha.instructorLiderId,
+        asignadoPorNombre: ficha.instructorLiderNombre,
+        createdAt: new Date(ficha.createdAt),
+      },
+    ];
   });
 
   return globalForFichaStore.fichaStore;
@@ -156,6 +173,20 @@ export class FichaService {
       estado: FICHA_ESTADO.PLANEADA,
       instructorLiderId: leader.id,
       instructorLiderNombre: leader.nombre,
+      liderHistorial: [
+        {
+          id: randomUUID(),
+          instructorId: leader.id,
+          instructorNombre: leader.nombre,
+          instructorCorreo: leader.correo ?? null,
+          fechaInicio: this.parseDate(data.fechaInicio),
+          fechaFin: null,
+          motivo: "Asignación inicial",
+          asignadoPorId: leader.id,
+          asignadoPorNombre: leader.nombre,
+          createdAt: now,
+        },
+      ],
       observaciones: this.normalizeOptional(data.observaciones),
       seguimientos: plan.competencias.map((competencia) => ({
         id: randomUUID(),
@@ -445,6 +476,7 @@ export class FichaService {
           ? data.observaciones
           : ficha.observaciones,
     });
+    const previousStartDate = this.formatDate(ficha.fechaInicio);
 
     ficha.numero = mergedData.numero;
     ficha.municipio = mergedData.municipio;
@@ -457,7 +489,104 @@ export class FichaService {
     ficha.fechaFinLectiva = this.parseDate(mergedData.fechaFinLectiva);
     ficha.fechaFinPractica = this.parseDate(mergedData.fechaFinPractica);
     ficha.observaciones = this.normalizeOptional(mergedData.observaciones);
+    if (
+      ficha.liderHistorial.length === 1 &&
+      ficha.liderHistorial[0].fechaFin === null &&
+      this.formatDate(ficha.liderHistorial[0].fechaInicio) ===
+        previousStartDate
+    ) {
+      ficha.liderHistorial[0].fechaInicio = new Date(ficha.fechaInicio);
+    }
     if (data.estado !== undefined) ficha.estado = data.estado;
+    ficha.updatedAt = new Date();
+
+    return { data: this.toDto(ficha) };
+  }
+
+  async changeLeader(
+    fichaId: string,
+    input: ChangeFichaLeaderDto,
+    actor: FichaLeaderIdentity,
+  ): Promise<FichaResponse> {
+    const data = changeFichaLeaderSchema.parse(input);
+    const ficha = this.requireFicha(fichaId);
+
+    if (
+      ficha.estado === FICHA_ESTADO.FINALIZADA ||
+      ficha.estado === FICHA_ESTADO.CANCELADA
+    ) {
+      throw new FichaServiceError(
+        "INVALID_LEADER_CHANGE",
+        "No puedes cambiar el líder de una ficha finalizada o cancelada.",
+      );
+    }
+
+    const instructorResponse = await instructorService.findById(
+      data.instructorId,
+    );
+
+    if (!instructorResponse || !instructorResponse.data.estado) {
+      throw new FichaServiceError(
+        "INSTRUCTOR_NOT_FOUND",
+        "El nuevo instructor líder no existe o está inactivo.",
+      );
+    }
+
+    if (ficha.instructorLiderId === data.instructorId) {
+      throw new FichaServiceError(
+        "INVALID_LEADER_CHANGE",
+        "El instructor seleccionado ya es el líder actual.",
+      );
+    }
+
+    const currentAssignment = ficha.liderHistorial.find(
+      (assignment) => assignment.fechaFin === null,
+    );
+
+    if (!currentAssignment) {
+      throw new FichaServiceError(
+        "INVALID_LEADER_CHANGE",
+        "La ficha no tiene una asignación de líder activa.",
+      );
+    }
+
+    const fichaStart = this.formatDate(ficha.fechaInicio);
+    const fichaEnd = this.formatDate(ficha.fechaFinPractica);
+    const currentAssignmentStart = this.formatDate(
+      currentAssignment.fechaInicio,
+    );
+
+    if (
+      data.fechaInicio < fichaStart ||
+      data.fechaInicio > fichaEnd ||
+      data.fechaInicio <= currentAssignmentStart
+    ) {
+      throw new FichaServiceError(
+        "INVALID_LEADER_CHANGE",
+        "La fecha efectiva debe ser posterior al inicio del líder actual y estar dentro de la ficha.",
+      );
+    }
+
+    const instructor = instructorResponse.data;
+    const effectiveDate = this.parseDate(data.fechaInicio);
+    const previousEndDate = new Date(effectiveDate);
+    previousEndDate.setUTCDate(previousEndDate.getUTCDate() - 1);
+    currentAssignment.fechaFin = previousEndDate;
+
+    ficha.liderHistorial.push({
+      id: randomUUID(),
+      instructorId: instructor.id,
+      instructorNombre: instructor.nombre,
+      instructorCorreo: instructor.correo,
+      fechaInicio: effectiveDate,
+      fechaFin: null,
+      motivo: data.motivo,
+      asignadoPorId: actor.id,
+      asignadoPorNombre: actor.nombre,
+      createdAt: new Date(),
+    });
+    ficha.instructorLiderId = instructor.id;
+    ficha.instructorLiderNombre = instructor.nombre;
     ficha.updatedAt = new Date();
 
     return { data: this.toDto(ficha) };
@@ -812,6 +941,14 @@ export class FichaService {
     return {
       ...ficha,
       diasFormacion: [...ficha.diasFormacion],
+      liderHistorial: ficha.liderHistorial.map((assignment) => ({
+        ...assignment,
+        fechaInicio: this.formatDate(assignment.fechaInicio),
+        fechaFin: assignment.fechaFin
+          ? this.formatDate(assignment.fechaFin)
+          : null,
+        createdAt: assignment.createdAt.toISOString(),
+      })),
       seguimientos: ficha.seguimientos.map((seguimiento) => ({
         ...seguimiento,
         programaciones: seguimiento.programaciones.map((programacion) => ({

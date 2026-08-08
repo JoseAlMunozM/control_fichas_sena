@@ -17,6 +17,7 @@ import type {
   FichasResponse,
 } from "../types";
 import {
+  changeFichaLeaderSchema,
   createNovedadCompetenciaSchema,
   createProgramacionSchema,
   createFichaSchema,
@@ -36,6 +37,7 @@ function getLeaderIdentity(session: Session) {
     id: session.user.id,
     nombre:
       session.user.name ?? session.user.email ?? "Instructor líder",
+    correo: session.user.email,
   };
 }
 
@@ -124,6 +126,25 @@ export async function deleteFichaAction(
     const response = await fichaService.delete(id);
 
     revalidateFichaPaths();
+
+    return response;
+  });
+}
+
+export async function changeFichaLeaderAction(
+  fichaIdInput: unknown,
+  dataInput: unknown,
+): Promise<FichaActionResult<FichaResponse>> {
+  return executeFichaAction(async (session) => {
+    const fichaId = fichaIdSchema.parse(fichaIdInput);
+    const data = changeFichaLeaderSchema.parse(dataInput);
+    const response = await fichaService.changeLeader(
+      fichaId,
+      data,
+      getLeaderIdentity(session),
+    );
+
+    revalidateFichaPaths(fichaId);
 
     return response;
   });

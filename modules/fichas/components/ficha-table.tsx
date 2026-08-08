@@ -65,6 +65,12 @@ export function FichaTable({
         ficha.sede ? `${ficha.municipio} · ${ficha.sede}` : ficha.municipio,
     },
     {
+      id: "lider",
+      header: "Instructor líder",
+      cellClassName: "min-w-48 whitespace-normal",
+      render: (ficha) => ficha.instructorLiderNombre,
+    },
+    {
       id: "jornada",
       header: "Jornada",
       cellClassName: "max-w-64 whitespace-normal",
@@ -129,6 +135,7 @@ export function FichaTable({
       columns={columns}
       data={fichas}
       getRowKey={(ficha) => ficha.id}
+      tableClassName="min-w-[1350px]"
     />
   );
 }

@@ -1,4 +1,5 @@
 export * from "./ficha-form";
+export * from "./ficha-leader-history-modal";
 export * from "./ficha-detail";
 export * from "./ficha-table";
 export * from "./fichas-page-content";

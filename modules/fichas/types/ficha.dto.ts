@@ -1,5 +1,6 @@
 import type {
   FichaEntity,
+  FichaLiderAsignacionEntity,
   FichaSeguimientoEntity,
   NovedadCompetenciaEntity,
   ProgramacionCompetenciaEntity,
@@ -38,6 +39,7 @@ export type FichaDto = Omit<
   | "fechaFinLectiva"
   | "fechaFinPractica"
   | "seguimientos"
+  | "liderHistorial"
   | "createdAt"
   | "updatedAt"
 > & {
@@ -45,6 +47,16 @@ export type FichaDto = Omit<
   fechaFinLectiva: string;
   fechaFinPractica: string;
   seguimientos: readonly FichaSeguimientoDto[];
+  liderHistorial: readonly FichaLiderAsignacionDto[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type FichaLiderAsignacionDto = Omit<
+  FichaLiderAsignacionEntity,
+  "fechaInicio" | "fechaFin" | "createdAt"
+> & {
+  fechaInicio: string;
+  fechaFin: string | null;
+  createdAt: string;
 };

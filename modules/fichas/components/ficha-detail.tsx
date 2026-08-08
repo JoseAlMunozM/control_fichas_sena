@@ -28,6 +28,7 @@ import type {
 } from "../types";
 import { formatFichaDate, formatFichaSchedule } from "../utils";
 import { ProgramacionManagerModal } from "./programacion-manager-modal";
+import { FichaLeaderHistoryModal } from "./ficha-leader-history-modal";
 
 export interface FichaDetailProps {
   ficha: FichaDto;
@@ -64,6 +65,7 @@ export function FichaDetail({
   const [ficha, setFicha] = useState(initialFicha);
   const [selectedSeguimientoId, setSelectedSeguimientoId] =
     useState<string | null>(null);
+  const [isLeaderHistoryOpen, setIsLeaderHistoryOpen] = useState(false);
   const selectedSeguimiento = ficha.seguimientos.find(
     (seguimiento) => seguimiento.id === selectedSeguimientoId,
   );
@@ -207,7 +209,18 @@ export function FichaDetail({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Información general">
+        <Card
+          headerAction={
+            <Button
+              onClick={() => setIsLeaderHistoryOpen(true)}
+              size="sm"
+              variant="ghost"
+            >
+              Ver histórico
+            </Button>
+          }
+          title="Información general"
+        >
           <dl className="space-y-3 text-sm">
             <div>
               <dt className="text-zinc-500">Instructor líder</dt>
@@ -322,6 +335,15 @@ export function FichaDetail({
           onClose={() => setSelectedSeguimientoId(null)}
           onFichaChange={setFicha}
           seguimiento={selectedSeguimiento}
+        />
+      ) : null}
+
+      {isLeaderHistoryOpen ? (
+        <FichaLeaderHistoryModal
+          ficha={ficha}
+          instructores={instructores}
+          onClose={() => setIsLeaderHistoryOpen(false)}
+          onFichaChange={setFicha}
         />
       ) : null}
     </div>

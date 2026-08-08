@@ -1,3 +1,4 @@
+export * from "./change-ficha-leader.dto";
 export * from "./create-ficha.dto";
 export * from "./ficha-action-result";
 export * from "./ficha.dto";

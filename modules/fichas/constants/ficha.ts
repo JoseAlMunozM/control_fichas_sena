@@ -94,3 +94,7 @@ export const NOVEDAD_COMPETENCIA_TIPO_LABELS = {
 export const NOVEDAD_FIELD_LIMITS = {
   descripcion: 1000,
 } as const;
+
+export const FICHA_LEADER_LIMITS = {
+  motivo: 500,
+} as const;

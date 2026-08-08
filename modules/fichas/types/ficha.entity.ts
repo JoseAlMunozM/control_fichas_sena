@@ -55,6 +55,19 @@ export interface NovedadCompetenciaEntity {
   updatedAt: Date;
 }
 
+export interface FichaLiderAsignacionEntity {
+  id: string;
+  instructorId: string;
+  instructorNombre: string;
+  instructorCorreo: string | null;
+  fechaInicio: Date;
+  fechaFin: Date | null;
+  motivo: string | null;
+  asignadoPorId: string;
+  asignadoPorNombre: string;
+  createdAt: Date;
+}
+
 export interface ProgramacionBloqueEntity {
   id: string;
   dia: DiaSemana;
@@ -97,6 +110,7 @@ export interface FichaEntity {
   estado: FichaEstado;
   instructorLiderId: string;
   instructorLiderNombre: string;
+  liderHistorial: FichaLiderAsignacionEntity[];
   observaciones: string | null;
   seguimientos: FichaSeguimientoEntity[];
   createdAt: Date;
