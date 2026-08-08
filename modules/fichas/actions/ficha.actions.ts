@@ -76,6 +76,7 @@ async function executeFichaAction<Value>(
 
 function revalidateFichaPaths(fichaId?: string): void {
   revalidatePath("/fichas");
+  revalidatePath("/dashboard");
   if (fichaId) revalidatePath(`/fichas/${fichaId}`);
 }
 

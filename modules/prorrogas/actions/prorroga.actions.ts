@@ -68,6 +68,7 @@ async function executeProrrogaAction<Value>(
 function revalidateProrrogaPaths(fichaId?: string): void {
   revalidatePath("/prorrogas");
   revalidatePath("/fichas");
+  revalidatePath("/dashboard");
   if (fichaId) revalidatePath(`/fichas/${fichaId}`);
 }
 
