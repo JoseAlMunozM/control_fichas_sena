@@ -6,6 +6,10 @@ import type { Session } from "next-auth";
 
 import { AUTH_ROUTES } from "@/constants";
 import { auth } from "@/lib/auth";
+import {
+  createDevelopmentSession,
+  isDevelopmentAuthBypassEnabled,
+} from "@/lib/auth/development";
 import { hasAnyRole } from "@/lib/auth/roles";
 import type { UserRole } from "@/types";
 
@@ -16,7 +20,13 @@ export class AuthorizationError extends Error {
   }
 }
 
-export const getCurrentSession = cache(async () => auth());
+export const getCurrentSession = cache(async () => {
+  if (isDevelopmentAuthBypassEnabled()) {
+    return createDevelopmentSession();
+  }
+
+  return auth();
+});
 
 export async function requireAuth(): Promise<Session> {
   const session = await getCurrentSession();

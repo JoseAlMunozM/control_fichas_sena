@@ -1,0 +1,7 @@
+export type ProgramaErrorCode =
+  | "DUPLICATE_CODE"
+  | "DUPLICATE_PLAN_VERSION"
+  | "DUPLICATE_COMPETENCY"
+  | "PLAN_NOT_FOUND"
+  | "COMPETENCY_NOT_FOUND"
+  | "NOT_FOUND";

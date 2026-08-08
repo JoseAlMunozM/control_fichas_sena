@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppShell, ThemeScript } from "@/components/layout";
 import { APP_NAME } from "@/constants";
-import { auth } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/auth/authorization";
 
 import "./globals.css";
 
@@ -30,7 +30,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
+  const session = await getCurrentSession();
 
   return (
     <html
