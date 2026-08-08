@@ -3,7 +3,6 @@ import type {
   NavigationMenuConfig,
 } from "@/types/navigation";
 
-import { USER_ROLE } from "./auth";
 import { ROUTE_PATHS } from "./routes";
 
 export const NAVIGATION_MENUS = [
@@ -26,11 +25,6 @@ export const NAVIGATION_MENUS = [
     id: "tracking",
     label: "Seguimiento",
     order: 4,
-  },
-  {
-    id: "system",
-    label: "Sistema",
-    order: 5,
   },
 ] as const satisfies readonly NavigationMenuConfig[];
 
@@ -73,15 +67,6 @@ export const ROUTE_CONFIG = [
     },
   },
   {
-    path: ROUTE_PATHS.competencias,
-    label: "Competencias",
-    access: "authenticated",
-    navigation: {
-      menuId: "academic",
-      order: 3,
-    },
-  },
-  {
     path: ROUTE_PATHS.instructores,
     label: "Instructores",
     access: "authenticated",
@@ -96,16 +81,6 @@ export const ROUTE_CONFIG = [
     access: "authenticated",
     navigation: {
       menuId: "tracking",
-      order: 1,
-    },
-  },
-  {
-    path: ROUTE_PATHS.admin,
-    label: "Administración",
-    access: "authenticated",
-    roles: [USER_ROLE.ADMIN],
-    navigation: {
-      menuId: "system",
       order: 1,
     },
   },
