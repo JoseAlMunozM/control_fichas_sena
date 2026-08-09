@@ -7,12 +7,302 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  ADMIN
+  COORDINATOR
+  INSTRUCTOR
+  USER
+}
+
+enum CompetenciaTipo {
+  TECNICA
+  TRANSVERSAL
+  PRACTICA
+}
+
+enum FichaEstado {
+  PLANEADA
+  EN_FORMACION
+  ETAPA_PRACTICA
+  FINALIZADA
+  CANCELADA
+}
+
+enum SeguimientoCompetenciaEstado {
+  PENDIENTE
+  PROGRAMADA
+  EN_EJECUCION
+  FINALIZADA
+  SUSPENDIDA
+  CANCELADA
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+enum NovedadCompetenciaTipo {
+  OBSERVACION
+  REPROGRAMACION
+  CAMBIO_INSTRUCTOR
+  SUSPENSION
+  OTRA
+}
+
+enum ProrrogaEstado {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+model Usuario {
+  id                          String                    @id @default(uuid()) @db.Uuid
+  nombre                      String                    @db.VarChar(150)
+  correo                      String                    @unique @db.VarChar(254)
+  passwordHash                String                    @db.VarChar(255)
+  role                        UserRole                  @default(USER)
+  estado                      Boolean                   @default(true)
+  instructor                  Instructor?
+  programacionesRegistradas   ProgramacionCompetencia[] @relation("ProgramacionRegistradaPor")
+  novedadesRegistradas        NovedadCompetencia[]      @relation("NovedadRegistradaPor")
+  asignacionesLiderRealizadas FichaLiderAsignacion[]    @relation("LiderAsignadoPor")
+  prorrogasSolicitadas        Prorroga[]                @relation("ProrrogaSolicitadaPor")
+  prorrogasResueltas          Prorroga[]                @relation("ProrrogaResueltaPor")
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt
+
+  @@index([estado, role])
+}
+
 model Programa {
-  id          String   @id @default(uuid()) @db.Uuid
-  codigo      String   @unique
-  nombre      String
-  descripcion String?
-  estado      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String          @id @default(uuid()) @db.Uuid
+  codigo      String          @unique @db.VarChar(30)
+  nombre      String          @db.VarChar(150)
+  descripcion String?         @db.VarChar(1000)
+  estado      Boolean         @default(true)
+  planes      PlanFormacion[]
+  fichas      Ficha[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([estado, nombre])
+}
+
+model PlanFormacion {
+  id           String            @id @default(uuid()) @db.Uuid
+  programaId   String            @db.Uuid
+  programa     Programa          @relation(fields: [programaId], references: [id], onDelete: Restrict)
+  version      String            @db.VarChar(30)
+  estado       Boolean           @default(false)
+  competencias PlanCompetencia[]
+  fichas       Ficha[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([programaId, version])
+  @@index([programaId, estado])
+}
+
+model PlanCompetencia {
+  id           String             @id @default(uuid()) @db.Uuid
+  planId       String             @db.Uuid
+  plan         PlanFormacion      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  norma        String             @db.VarChar(500)
+  nombre       String             @db.VarChar(150)
+  tipo         CompetenciaTipo
+  horas        Int
+  orden        Int
+  seguimientos FichaSeguimiento[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([planId, nombre])
+  @@unique([planId, norma])
+  @@unique([planId, orden])
+  @@index([planId, tipo])
+}
+
+model Instructor {
+  id             String                    @id @default(uuid()) @db.Uuid
+  usuarioId      String?                   @unique @db.Uuid
+  usuario        Usuario?                  @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  nombre         String                    @db.VarChar(150)
+  correo         String                    @unique @db.VarChar(254)
+  telefono       String?                   @db.VarChar(30)
+  estado         Boolean                   @default(true)
+  observaciones  String?                   @db.VarChar(1000)
+  fichasLider    Ficha[]                   @relation("FichaLiderActual")
+  historialLider FichaLiderAsignacion[]    @relation("InstructorLiderHistorial")
+  programaciones ProgramacionCompetencia[]
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@index([estado, nombre])
+}
+
+model Ficha {
+  id                String                 @id @default(uuid()) @db.Uuid
+  numero            String                 @unique @db.VarChar(30)
+  programaId        String                 @db.Uuid
+  programa          Programa               @relation(fields: [programaId], references: [id], onDelete: Restrict)
+  planId            String                 @db.Uuid
+  plan              PlanFormacion          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  municipio         String                 @db.VarChar(100)
+  sede              String?                @db.VarChar(150)
+  modalidad         String?                @db.VarChar(100)
+  fechaInicio       DateTime               @db.Date
+  fechaFinLectiva   DateTime               @db.Date
+  fechaFinPractica  DateTime               @db.Date
+  estado            FichaEstado            @default(PLANEADA)
+  instructorLiderId String                 @db.Uuid
+  instructorLider   Instructor             @relation("FichaLiderActual", fields: [instructorLiderId], references: [id], onDelete: Restrict)
+  observaciones     String?                @db.VarChar(1000)
+  jornadas          FichaJornada[]
+  seguimientos      FichaSeguimiento[]
+  liderHistorial    FichaLiderAsignacion[]
+  prorrogas         Prorroga[]
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  @@index([programaId, estado])
+  @@index([instructorLiderId, estado])
+  @@index([fechaInicio, fechaFinPractica])
+}
+
+model FichaJornada {
+  id         String    @id @default(uuid()) @db.Uuid
+  fichaId    String    @db.Uuid
+  ficha      Ficha     @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  dia        DiaSemana
+  horaInicio String    @db.VarChar(5)
+  horaFin    String    @db.VarChar(5)
+
+  @@unique([fichaId, dia])
+  @@index([dia, horaInicio, horaFin])
+}
+
+model FichaSeguimiento {
+  id                String                       @id @default(uuid()) @db.Uuid
+  fichaId           String                       @db.Uuid
+  ficha             Ficha                        @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  competenciaId     String?                      @db.Uuid
+  competencia       PlanCompetencia?             @relation(fields: [competenciaId], references: [id], onDelete: SetNull)
+  competenciaNombre String                       @db.VarChar(150)
+  competenciaNorma  String                       @db.VarChar(500)
+  competenciaTipo   CompetenciaTipo
+  horasPlan         Int
+  orden             Int
+  estado            SeguimientoCompetenciaEstado @default(PENDIENTE)
+  programaciones    ProgramacionCompetencia[]
+  novedades         NovedadCompetencia[]
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+
+  @@unique([fichaId, orden])
+  @@index([fichaId, estado])
+  @@index([competenciaId])
+}
+
+model ProgramacionCompetencia {
+  id                  String               @id @default(uuid()) @db.Uuid
+  seguimientoId       String               @db.Uuid
+  seguimiento         FichaSeguimiento     @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+  instructorId        String               @db.Uuid
+  instructor          Instructor           @relation(fields: [instructorId], references: [id], onDelete: Restrict)
+  instructorNombre    String               @db.VarChar(150)
+  instructorCorreo    String               @db.VarChar(254)
+  fechaInicio         DateTime             @db.Date
+  fechaFin            DateTime             @db.Date
+  horasProgramadas    Float
+  registradoPorId     String?              @db.Uuid
+  registradoPor       Usuario?             @relation("ProgramacionRegistradaPor", fields: [registradoPorId], references: [id], onDelete: SetNull)
+  registradoPorNombre String               @db.VarChar(150)
+  bloques             ProgramacionBloque[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([seguimientoId, fechaInicio, fechaFin])
+  @@index([instructorId, fechaInicio, fechaFin])
+}
+
+model ProgramacionBloque {
+  id             String                  @id @default(uuid()) @db.Uuid
+  programacionId String                  @db.Uuid
+  programacion   ProgramacionCompetencia @relation(fields: [programacionId], references: [id], onDelete: Cascade)
+  dia            DiaSemana
+  horaInicio     String                  @db.VarChar(5)
+  horaFin        String                  @db.VarChar(5)
+
+  @@index([programacionId, dia])
+}
+
+model NovedadCompetencia {
+  id                  String                 @id @default(uuid()) @db.Uuid
+  seguimientoId       String                 @db.Uuid
+  seguimiento         FichaSeguimiento       @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+  fecha               DateTime               @db.Date
+  tipo                NovedadCompetenciaTipo
+  descripcion         String                 @db.VarChar(1000)
+  registradoPorId     String?                @db.Uuid
+  registradoPor       Usuario?               @relation("NovedadRegistradaPor", fields: [registradoPorId], references: [id], onDelete: SetNull)
+  registradoPorNombre String                 @db.VarChar(150)
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  @@index([seguimientoId, fecha])
+}
+
+model FichaLiderAsignacion {
+  id                String     @id @default(uuid()) @db.Uuid
+  fichaId           String     @db.Uuid
+  ficha             Ficha      @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  instructorId      String     @db.Uuid
+  instructor        Instructor @relation("InstructorLiderHistorial", fields: [instructorId], references: [id], onDelete: Restrict)
+  instructorNombre  String     @db.VarChar(150)
+  instructorCorreo  String?    @db.VarChar(254)
+  fechaInicio       DateTime   @db.Date
+  fechaFin          DateTime?  @db.Date
+  motivo            String?    @db.VarChar(500)
+  asignadoPorId     String?    @db.Uuid
+  asignadoPor       Usuario?   @relation("LiderAsignadoPor", fields: [asignadoPorId], references: [id], onDelete: SetNull)
+  asignadoPorNombre String     @db.VarChar(150)
+  createdAt         DateTime   @default(now())
+
+  @@index([fichaId, fechaInicio])
+  @@index([instructorId, fechaInicio])
+}
+
+model Prorroga {
+  id                       String         @id @default(uuid()) @db.Uuid
+  fichaId                  String         @db.Uuid
+  ficha                    Ficha          @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  fichaNumero              String         @db.VarChar(30)
+  programaNombre           String         @db.VarChar(150)
+  municipio                String         @db.VarChar(100)
+  fechaInicio              DateTime       @db.Date
+  fechaFinLectivaAnterior  DateTime       @db.Date
+  fechaFinPracticaAnterior DateTime       @db.Date
+  fechaFinLectivaNueva     DateTime       @db.Date
+  fechaFinPracticaNueva    DateTime       @db.Date
+  motivo                   String         @db.VarChar(1000)
+  estado                   ProrrogaEstado @default(PENDIENTE)
+  observacionRespuesta     String?        @db.VarChar(1000)
+  solicitadoPorId          String?        @db.Uuid
+  solicitadoPor            Usuario?       @relation("ProrrogaSolicitadaPor", fields: [solicitadoPorId], references: [id], onDelete: SetNull)
+  solicitadoPorNombre      String         @db.VarChar(150)
+  resueltoPorId            String?        @db.Uuid
+  resueltoPor              Usuario?       @relation("ProrrogaResueltaPor", fields: [resueltoPorId], references: [id], onDelete: SetNull)
+  resueltoPorNombre        String?        @db.VarChar(150)
+  resolvedAt               DateTime?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+
+  @@index([fichaId, estado])
+  @@index([estado, createdAt])
 }

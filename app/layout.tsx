@@ -42,7 +42,10 @@ export default async function RootLayout({
         <ThemeScript />
       </head>
       <body className="min-h-full">
-        <AppShell currentUserRole={session?.user.role}>
+        <AppShell
+          currentUserName={session?.user.name}
+          currentUserRole={session?.user.role}
+        >
           {children}
         </AppShell>
       </body>

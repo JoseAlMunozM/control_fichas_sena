@@ -1,15 +1,18 @@
 import { APP_NAME } from "@/constants";
 import { Button } from "@/components/ui";
+import { logoutAction } from "@/modules/auth/actions";
 
 import { MenuIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 
 export interface HeaderProps {
+  currentUserName?: string | null;
   onOpenSidebar: () => void;
   title?: string;
 }
 
 export function Header({
+  currentUserName,
   onOpenSidebar,
   title = APP_NAME,
 }: HeaderProps) {
@@ -29,7 +32,19 @@ export function Header({
         </p>
       </div>
 
-      <ThemeToggle />
+      <div className="flex items-center gap-2">
+        {currentUserName ? (
+          <span className="hidden max-w-48 truncate text-sm text-zinc-600 sm:block dark:text-zinc-300">
+            {currentUserName}
+          </span>
+        ) : null}
+        <ThemeToggle />
+        <form action={logoutAction}>
+          <Button size="sm" type="submit" variant="ghost">
+            Salir
+          </Button>
+        </form>
+      </div>
     </header>
   );
 }

@@ -36,6 +36,7 @@ import {
   updatePlanFormacionSchema,
   updateProgramaSchema,
 } from "../validators";
+import { loadProgramas, saveProgramas } from "./programa.persistence";
 
 const SEED_DATE = new Date("2026-01-01T12:00:00.000Z");
 
@@ -280,9 +281,22 @@ function createSeedProgramas(): ProgramaEntity[] {
 }
 
 function getProgramaStore(): ProgramaEntity[] {
-  globalForProgramaStore.programaStore ??= createSeedProgramas();
+  globalForProgramaStore.programaStore ??=
+    process.env.NODE_ENV === "test" ? createSeedProgramas() : [];
 
   return globalForProgramaStore.programaStore;
+}
+
+async function refreshProgramaStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    globalForProgramaStore.programaStore = await loadProgramas();
+  }
+}
+
+async function persistProgramaStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    await saveProgramas(getProgramaStore());
+  }
 }
 
 export class ProgramaServiceError extends Error {
@@ -299,6 +313,7 @@ export class ProgramaService {
   async findAll(
     filters: ProgramaFilters = {},
   ): Promise<ProgramasResponse> {
+    await refreshProgramaStore();
     const { page, pageSize } = this.getPagination(filters);
     const filteredProgramas = getProgramaStore()
       .filter((programa) => this.matchesFilters(programa, filters))
@@ -321,12 +336,14 @@ export class ProgramaService {
   }
 
   async findById(id: string): Promise<ProgramaResponse | null> {
+    await refreshProgramaStore();
     const programa = getProgramaStore().find((item) => item.id === id);
 
     return programa ? { data: this.toDto(programa) } : null;
   }
 
   async create(input: CreateProgramaDto): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const data = createProgramaSchema.parse(input);
     const store = getProgramaStore();
 
@@ -345,6 +362,7 @@ export class ProgramaService {
     };
 
     store.push(programa);
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
@@ -353,6 +371,7 @@ export class ProgramaService {
     id: string,
     input: UpdateProgramaDto,
   ): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const data = updateProgramaSchema.parse(input);
     const programa = this.requirePrograma(id);
 
@@ -367,11 +386,13 @@ export class ProgramaService {
     }
     if (data.estado !== undefined) programa.estado = data.estado;
     programa.updatedAt = new Date();
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
 
   async delete(id: string): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const store = getProgramaStore();
     const index = store.findIndex((programa) => programa.id === id);
 
@@ -383,6 +404,7 @@ export class ProgramaService {
     }
 
     const [programa] = store.splice(index, 1);
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
@@ -391,6 +413,7 @@ export class ProgramaService {
     programaId: string,
     input: CreatePlanFormacionDto,
   ): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const data = createPlanFormacionSchema.parse(input);
     const programa = this.requirePrograma(programaId);
 
@@ -414,6 +437,7 @@ export class ProgramaService {
       updatedAt: now,
     });
     programa.updatedAt = now;
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
@@ -423,6 +447,7 @@ export class ProgramaService {
     planId: string,
     input: UpdatePlanFormacionDto,
   ): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const data = updatePlanFormacionSchema.parse(input);
     const programa = this.requirePrograma(programaId);
     const plan = this.requirePlan(programa, planId);
@@ -444,6 +469,7 @@ export class ProgramaService {
 
     plan.updatedAt = new Date();
     programa.updatedAt = plan.updatedAt;
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
@@ -452,6 +478,7 @@ export class ProgramaService {
     programaId: string,
     planId: string,
   ): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const programa = this.requirePrograma(programaId);
     const index = programa.planes.findIndex((plan) => plan.id === planId);
 
@@ -464,6 +491,7 @@ export class ProgramaService {
 
     programa.planes.splice(index, 1);
     programa.updatedAt = new Date();
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
@@ -473,6 +501,7 @@ export class ProgramaService {
     planId: string,
     input: CreatePlanCompetenciaDto,
   ): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const data = createPlanCompetenciaSchema.parse(input);
     const programa = this.requirePrograma(programaId);
     const plan = this.requirePlan(programa, planId);
@@ -486,6 +515,7 @@ export class ProgramaService {
     });
     plan.updatedAt = new Date();
     programa.updatedAt = plan.updatedAt;
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
@@ -496,6 +526,7 @@ export class ProgramaService {
     competenciaId: string,
     input: UpdatePlanCompetenciaDto,
   ): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const data = updatePlanCompetenciaSchema.parse(input);
     const programa = this.requirePrograma(programaId);
     const plan = this.requirePlan(programa, planId);
@@ -520,6 +551,7 @@ export class ProgramaService {
     Object.assign(competencia, data);
     plan.updatedAt = new Date();
     programa.updatedAt = plan.updatedAt;
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }
@@ -529,6 +561,7 @@ export class ProgramaService {
     planId: string,
     competenciaId: string,
   ): Promise<ProgramaResponse> {
+    await refreshProgramaStore();
     const programa = this.requirePrograma(programaId);
     const plan = this.requirePlan(programa, planId);
     const index = plan.competencias.findIndex(
@@ -548,6 +581,7 @@ export class ProgramaService {
     });
     plan.updatedAt = new Date();
     programa.updatedAt = plan.updatedAt;
+    await persistProgramaStore();
 
     return { data: this.toDto(programa) };
   }

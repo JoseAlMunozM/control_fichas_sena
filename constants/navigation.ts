@@ -40,6 +40,18 @@ export const ROUTE_CONFIG = [
     },
   },
   {
+    path: ROUTE_PATHS.login,
+    label: "Iniciar sesión",
+    access: "public",
+    exact: true,
+  },
+  {
+    path: ROUTE_PATHS.setup,
+    label: "Configuración inicial",
+    access: "public",
+    exact: true,
+  },
+  {
     path: ROUTE_PATHS.dashboard,
     label: "Dashboard",
     access: "authenticated",

@@ -48,6 +48,7 @@ import {
   calculateProgrammedHours,
   schedulesOverlap,
 } from "../utils";
+import { loadFichas, saveFichas } from "./ficha.persistence";
 
 export interface FichaLeaderIdentity {
   id: string;
@@ -97,6 +98,18 @@ function getFichaStore(): FichaEntity[] {
   return globalForFichaStore.fichaStore;
 }
 
+async function refreshFichaStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    globalForFichaStore.fichaStore = await loadFichas();
+  }
+}
+
+async function persistFichaStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    await saveFichas(getFichaStore());
+  }
+}
+
 export class FichaServiceError extends Error {
   constructor(
     public readonly code: Exclude<
@@ -112,6 +125,7 @@ export class FichaServiceError extends Error {
 
 export class FichaService {
   async findAll(filters: FichaFilters = {}): Promise<FichasResponse> {
+    await refreshFichaStore();
     const { page, pageSize } = this.getPagination(filters);
     const filteredFichas = getFichaStore()
       .filter((ficha) => this.matchesFilters(ficha, filters))
@@ -132,6 +146,7 @@ export class FichaService {
   }
 
   async findById(id: string): Promise<FichaResponse | null> {
+    await refreshFichaStore();
     const ficha = getFichaStore().find((item) => item.id === id);
 
     return ficha ? { data: this.toDto(ficha) } : null;
@@ -141,8 +156,10 @@ export class FichaService {
     input: CreateFichaDto,
     leader: FichaLeaderIdentity,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = createFichaSchema.parse(input);
     const store = getFichaStore();
+    const effectiveLeader = await this.resolveLeaderInstructor(leader);
 
     this.ensureUniqueNumber(data.numero);
 
@@ -182,14 +199,14 @@ export class FichaService {
       fechaFinLectiva: this.parseDate(data.fechaFinLectiva),
       fechaFinPractica: this.parseDate(data.fechaFinPractica),
       estado: FICHA_ESTADO.PLANEADA,
-      instructorLiderId: leader.id,
-      instructorLiderNombre: leader.nombre,
+      instructorLiderId: effectiveLeader.id,
+      instructorLiderNombre: effectiveLeader.nombre,
       liderHistorial: [
         {
           id: randomUUID(),
-          instructorId: leader.id,
-          instructorNombre: leader.nombre,
-          instructorCorreo: leader.correo ?? null,
+          instructorId: effectiveLeader.id,
+          instructorNombre: effectiveLeader.nombre,
+          instructorCorreo: effectiveLeader.correo ?? null,
           fechaInicio: this.parseDate(data.fechaInicio),
           fechaFin: null,
           motivo: "Asignación inicial",
@@ -217,6 +234,7 @@ export class FichaService {
 
     store.push(ficha);
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -226,6 +244,7 @@ export class FichaService {
     input: CreateProgramacionDto,
     leader: FichaLeaderIdentity,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = createProgramacionSchema.parse(input);
     const ficha = this.requireFicha(fichaId);
     const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
@@ -271,6 +290,7 @@ export class FichaService {
     }
     ficha.updatedAt = now;
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -280,6 +300,7 @@ export class FichaService {
     programacionId: string,
     input: UpdateProgramacionDto,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = updateProgramacionSchema.parse(input);
     const ficha = this.requireFicha(fichaId);
     const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
@@ -323,6 +344,7 @@ export class FichaService {
     Object.assign(programacion, proposedProgramming);
     ficha.updatedAt = programacion.updatedAt;
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -331,6 +353,7 @@ export class FichaService {
     seguimientoId: string,
     programacionId: string,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const ficha = this.requireFicha(fichaId);
     const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
     const index = seguimiento.programaciones.findIndex(
@@ -353,6 +376,7 @@ export class FichaService {
     }
     ficha.updatedAt = new Date();
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -361,6 +385,7 @@ export class FichaService {
     seguimientoId: string,
     input: UpdateSeguimientoEstadoDto,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = updateSeguimientoEstadoSchema.parse(input);
     const ficha = this.requireFicha(fichaId);
     const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
@@ -378,6 +403,7 @@ export class FichaService {
     seguimiento.estado = data.estado;
     ficha.updatedAt = new Date();
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -387,6 +413,7 @@ export class FichaService {
     input: CreateNovedadCompetenciaDto,
     leader: FichaLeaderIdentity,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = createNovedadCompetenciaSchema.parse(input);
     const ficha = this.requireFicha(fichaId);
     const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
@@ -406,6 +433,7 @@ export class FichaService {
     });
     ficha.updatedAt = now;
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -415,6 +443,7 @@ export class FichaService {
     novedadId: string,
     input: UpdateNovedadCompetenciaDto,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = updateNovedadCompetenciaSchema.parse(input);
     const ficha = this.requireFicha(fichaId);
     const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
@@ -428,6 +457,7 @@ export class FichaService {
     novedad.updatedAt = new Date();
     ficha.updatedAt = novedad.updatedAt;
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -436,6 +466,7 @@ export class FichaService {
     seguimientoId: string,
     novedadId: string,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const ficha = this.requireFicha(fichaId);
     const seguimiento = this.requireSeguimiento(ficha, seguimientoId);
     const index = seguimiento.novedades.findIndex(
@@ -452,6 +483,7 @@ export class FichaService {
     seguimiento.novedades.splice(index, 1);
     ficha.updatedAt = new Date();
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -459,6 +491,7 @@ export class FichaService {
     id: string,
     input: UpdateFichaDto,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = updateFichaSchema.parse(input);
     const ficha = this.requireFicha(id);
 
@@ -508,6 +541,7 @@ export class FichaService {
     if (data.estado !== undefined) ficha.estado = data.estado;
     ficha.updatedAt = new Date();
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -516,6 +550,7 @@ export class FichaService {
     input: ChangeFichaLeaderDto,
     actor: FichaLeaderIdentity,
   ): Promise<FichaResponse> {
+    await refreshFichaStore();
     const data = changeFichaLeaderSchema.parse(input);
     const ficha = this.requireFicha(fichaId);
 
@@ -597,10 +632,12 @@ export class FichaService {
     ficha.instructorLiderNombre = instructor.nombre;
     ficha.updatedAt = new Date();
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
   async delete(id: string): Promise<FichaResponse> {
+    await refreshFichaStore();
     const store = getFichaStore();
     const index = store.findIndex((ficha) => ficha.id === id);
 
@@ -613,6 +650,7 @@ export class FichaService {
 
     const [ficha] = store.splice(index, 1);
 
+    await persistFichaStore();
     return { data: this.toDto(ficha) };
   }
 
@@ -813,6 +851,38 @@ export class FichaService {
         }
       }
     }
+  }
+
+  private async resolveLeaderInstructor(
+    leader: FichaLeaderIdentity,
+  ): Promise<FichaLeaderIdentity> {
+    if (process.env.NODE_ENV === "test") return leader;
+
+    const instructors = await instructorService.findAll({
+      estado: true,
+      pageSize: 100,
+    });
+    const normalizedName = leader.nombre.trim().toLocaleLowerCase("es");
+    const normalizedEmail = leader.correo?.trim().toLocaleLowerCase("es");
+    const instructor = instructors.data.find(
+      (item) =>
+        item.id === leader.id ||
+        (normalizedEmail && item.correo === normalizedEmail) ||
+        item.nombre.trim().toLocaleLowerCase("es") === normalizedName,
+    );
+
+    if (!instructor) {
+      throw new FichaServiceError(
+        "INSTRUCTOR_NOT_FOUND",
+        "Registra primero al instructor líder con el mismo nombre de la sesión.",
+      );
+    }
+
+    return {
+      id: instructor.id,
+      nombre: instructor.nombre,
+      correo: instructor.correo,
+    };
   }
 
   private ensureBlocksDoNotOverlap(data: CreateProgramacionDto): void {

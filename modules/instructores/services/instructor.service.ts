@@ -22,6 +22,10 @@ import {
   createInstructorSchema,
   updateInstructorSchema,
 } from "../validators";
+import {
+  loadInstructores,
+  saveInstructores,
+} from "./instructor.persistence";
 
 const globalForInstructorStore = globalThis as unknown as {
   instructorStore?: InstructorEntity[];
@@ -31,6 +35,18 @@ function getInstructorStore(): InstructorEntity[] {
   globalForInstructorStore.instructorStore ??= [];
 
   return globalForInstructorStore.instructorStore;
+}
+
+async function refreshInstructorStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    globalForInstructorStore.instructorStore = await loadInstructores();
+  }
+}
+
+async function persistInstructorStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    await saveInstructores(getInstructorStore());
+  }
 }
 
 export class InstructorServiceError extends Error {
@@ -50,6 +66,7 @@ export class InstructorService {
   async findAll(
     filters: InstructorFilters = {},
   ): Promise<InstructoresResponse> {
+    await refreshInstructorStore();
     const { page, pageSize } = this.getPagination(filters);
     const search = filters.search?.trim().toLocaleLowerCase("es");
     const instructors = getInstructorStore()
@@ -84,12 +101,14 @@ export class InstructorService {
   }
 
   async findById(id: string): Promise<InstructorResponse | null> {
+    await refreshInstructorStore();
     const instructor = getInstructorStore().find((item) => item.id === id);
 
     return instructor ? { data: this.toDto(instructor) } : null;
   }
 
   async create(input: CreateInstructorDto): Promise<InstructorResponse> {
+    await refreshInstructorStore();
     const data = createInstructorSchema.parse(input);
 
     this.ensureUniqueEmail(data.correo);
@@ -107,6 +126,7 @@ export class InstructorService {
     };
 
     getInstructorStore().push(instructor);
+    await persistInstructorStore();
 
     return { data: this.toDto(instructor) };
   }
@@ -115,6 +135,7 @@ export class InstructorService {
     id: string,
     input: UpdateInstructorDto,
   ): Promise<InstructorResponse> {
+    await refreshInstructorStore();
     const data = updateInstructorSchema.parse(input);
     const instructor = this.requireInstructor(id);
 
@@ -131,11 +152,13 @@ export class InstructorService {
     }
     if (data.estado !== undefined) instructor.estado = data.estado;
     instructor.updatedAt = new Date();
+    await persistInstructorStore();
 
     return { data: this.toDto(instructor) };
   }
 
   async delete(id: string): Promise<InstructorResponse> {
+    await refreshInstructorStore();
     const store = getInstructorStore();
     const index = store.findIndex((instructor) => instructor.id === id);
 
@@ -147,6 +170,7 @@ export class InstructorService {
     }
 
     const [instructor] = store.splice(index, 1);
+    await persistInstructorStore();
 
     return { data: this.toDto(instructor) };
   }

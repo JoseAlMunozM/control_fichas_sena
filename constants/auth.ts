@@ -11,6 +11,7 @@ export const DEFAULT_USER_ROLE = USER_ROLE.USER;
 
 export const AUTH_ROUTES = {
   apiPrefix: "/api/auth",
-  signIn: "/api/auth/signin",
+  signIn: "/login",
+  setup: "/setup",
   afterSignIn: ROUTE_PATHS.dashboard,
 } as const;

@@ -20,6 +20,7 @@ import { Sidebar } from "./sidebar";
 
 export interface AppShellProps {
   children: ReactNode;
+  currentUserName?: string | null;
   currentUserRole?: UserRole;
   menuConfig?: readonly NavigationMenuConfig[];
   routes?: readonly AppRouteConfig[];
@@ -27,11 +28,17 @@ export interface AppShellProps {
 
 export function AppShell({
   children,
+  currentUserName,
   currentUserRole,
   menuConfig = NAVIGATION_MENUS,
   routes = ROUTE_CONFIG,
 }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  if (!currentUserRole) {
+    return <div className="min-h-screen">{children}</div>;
+  }
+
   const navigationMenus = createNavigationMenus(
     routes,
     menuConfig,
@@ -54,7 +61,10 @@ export function AppShell({
       />
 
       <div className="flex min-h-screen flex-col lg:pl-72">
-        <Header onOpenSidebar={() => setIsSidebarOpen(true)} />
+        <Header
+          currentUserName={currentUserName}
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+        />
 
         <div className="flex flex-1 flex-col">
           <main

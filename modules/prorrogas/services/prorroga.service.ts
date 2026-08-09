@@ -27,6 +27,7 @@ import {
   resolveProrrogaSchema,
   updateProrrogaSchema,
 } from "../validators";
+import { loadProrrogas, saveProrrogas } from "./prorroga.persistence";
 
 export interface ProrrogaActorIdentity {
   id: string;
@@ -41,6 +42,18 @@ function getProrrogaStore(): ProrrogaEntity[] {
   globalForProrrogaStore.prorrogaStore ??= [];
 
   return globalForProrrogaStore.prorrogaStore;
+}
+
+async function refreshProrrogaStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    globalForProrrogaStore.prorrogaStore = await loadProrrogas();
+  }
+}
+
+async function persistProrrogaStore(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    await saveProrrogas(getProrrogaStore());
+  }
 }
 
 export class ProrrogaServiceError extends Error {
@@ -60,6 +73,7 @@ export class ProrrogaService {
   async findAll(
     filters: ProrrogaFilters = {},
   ): Promise<ProrrogasResponse> {
+    await refreshProrrogaStore();
     const { page, pageSize } = this.getPagination(filters);
     const prorrogas = getProrrogaStore()
       .filter((prorroga) => this.matchesFilters(prorroga, filters))
@@ -83,6 +97,7 @@ export class ProrrogaService {
   }
 
   async findById(id: string): Promise<ProrrogaResponse | null> {
+    await refreshProrrogaStore();
     const prorroga = getProrrogaStore().find((item) => item.id === id);
 
     return prorroga ? { data: this.toDto(prorroga) } : null;
@@ -92,6 +107,7 @@ export class ProrrogaService {
     input: CreateProrrogaDto,
     actor: ProrrogaActorIdentity,
   ): Promise<ProrrogaResponse> {
+    await refreshProrrogaStore();
     const data = createProrrogaSchema.parse(input);
     const fichaResponse = await fichaService.findById(data.fichaId);
 
@@ -148,6 +164,7 @@ export class ProrrogaService {
 
     getProrrogaStore().push(prorroga);
 
+    await persistProrrogaStore();
     return { data: this.toDto(prorroga) };
   }
 
@@ -155,6 +172,7 @@ export class ProrrogaService {
     id: string,
     input: UpdateProrrogaDto,
   ): Promise<ProrrogaResponse> {
+    await refreshProrrogaStore();
     const data = updateProrrogaSchema.parse(input);
     const prorroga = this.requireProrroga(id);
 
@@ -175,6 +193,7 @@ export class ProrrogaService {
     prorroga.motivo = data.motivo;
     prorroga.updatedAt = new Date();
 
+    await persistProrrogaStore();
     return { data: this.toDto(prorroga) };
   }
 
@@ -183,6 +202,7 @@ export class ProrrogaService {
     input: ResolveProrrogaDto,
     actor: ProrrogaActorIdentity,
   ): Promise<ProrrogaResponse> {
+    await refreshProrrogaStore();
     const data = resolveProrrogaSchema.parse(input);
     const prorroga = this.requireProrroga(id);
 
@@ -220,10 +240,12 @@ export class ProrrogaService {
     prorroga.resolvedAt = now;
     prorroga.updatedAt = now;
 
+    await persistProrrogaStore();
     return { data: this.toDto(prorroga) };
   }
 
   async delete(id: string): Promise<ProrrogaResponse> {
+    await refreshProrrogaStore();
     const store = getProrrogaStore();
     const index = store.findIndex((prorroga) => prorroga.id === id);
 
@@ -237,6 +259,7 @@ export class ProrrogaService {
     this.ensurePending(store[index]);
     const [prorroga] = store.splice(index, 1);
 
+    await persistProrrogaStore();
     return { data: this.toDto(prorroga) };
   }
 
