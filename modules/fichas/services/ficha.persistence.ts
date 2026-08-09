@@ -74,7 +74,12 @@ export async function loadFichas(): Promise<FichaEntity[]> {
         instructorCorreo: item.instructorCorreo,
         fechaInicio: item.fechaInicio,
         fechaFin: item.fechaFin,
-        bloques: item.bloques.map((bloque) => ({ ...bloque })),
+        bloques: item.bloques.map((bloque) => ({
+          id: bloque.id,
+          dia: bloque.dia,
+          horaInicio: bloque.horaInicio,
+          horaFin: bloque.horaFin,
+        })),
         horasProgramadas: item.horasProgramadas,
         registradoPorId: item.registradoPorId ?? "",
         registradoPorNombre: item.registradoPorNombre,
