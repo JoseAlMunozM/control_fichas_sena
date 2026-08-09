@@ -74,12 +74,7 @@ export function FichaTable({
       id: "jornada",
       header: "Jornada",
       cellClassName: "max-w-64 whitespace-normal",
-      render: (ficha) =>
-        formatFichaSchedule(
-          ficha.diasFormacion,
-          ficha.horaInicio,
-          ficha.horaFin,
-        ),
+      render: (ficha) => formatFichaSchedule(ficha.jornadas),
     },
     {
       id: "finLectiva",

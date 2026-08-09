@@ -1,5 +1,7 @@
-import { DIA_SEMANA_LABELS } from "../constants";
-import type { DiaSemana } from "../types";
+import { DIA_SEMANA, DIA_SEMANA_LABELS } from "../constants";
+import type { DiaSemana, JornadaFormacion } from "../types";
+
+const dayOrder = Object.values(DIA_SEMANA);
 
 export function formatFichaDate(value: string): string {
   const [year, month, day] = value.split("-").map(Number);
@@ -12,18 +14,37 @@ export function formatFichaDate(value: string): string {
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-export function formatFichaSchedule(
-  days: readonly DiaSemana[],
-  startTime: string,
-  endTime: string,
-): string {
-  const dayLabels = days.map((day) => DIA_SEMANA_LABELS[day]);
-  const daysText =
-    dayLabels.length === 5 &&
-    days[0] === "LUNES" &&
-    days[4] === "VIERNES"
-      ? "Lunes a viernes"
-      : dayLabels.join(", ");
+function formatDays(days: readonly DiaSemana[]): string {
+  const sortedDays = [...days].sort(
+    (first, second) => dayOrder.indexOf(first) - dayOrder.indexOf(second),
+  );
+  const isMondayToFriday =
+    sortedDays.length === 5 &&
+    sortedDays.every((day, index) => day === dayOrder[index]);
 
-  return `${daysText} · ${startTime}–${endTime}`;
+  return isMondayToFriday
+    ? "Lunes a viernes"
+    : sortedDays.map((day) => DIA_SEMANA_LABELS[day]).join(", ");
+}
+
+export function formatFichaSchedule(
+  jornadas: readonly JornadaFormacion[],
+): string {
+  const groups = new Map<string, DiaSemana[]>();
+
+  jornadas.forEach((jornada) => {
+    const key = `${jornada.horaInicio}|${jornada.horaFin}`;
+    const days = groups.get(key) ?? [];
+
+    days.push(jornada.dia);
+    groups.set(key, days);
+  });
+
+  return [...groups.entries()]
+    .map(([key, days]) => {
+      const [startTime, endTime] = key.split("|");
+
+      return `${formatDays(days)} · ${startTime}–${endTime}`;
+    })
+    .join(" / ");
 }

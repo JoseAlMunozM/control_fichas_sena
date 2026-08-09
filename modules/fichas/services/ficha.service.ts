@@ -11,12 +11,13 @@ import { instructorService } from "@/modules/instructores/services";
 import { COMPETENCIA_TIPO } from "@/modules/programas/constants";
 import { programaService } from "@/modules/programas/services";
 
-import { FICHA_ESTADO, SEGUIMIENTO_ESTADO } from "../constants";
+import { DIA_SEMANA, FICHA_ESTADO, SEGUIMIENTO_ESTADO } from "../constants";
 import type {
   ChangeFichaLeaderDto,
   CreateFichaDto,
   CreateNovedadCompetenciaDto,
   CreateProgramacionDto,
+  DiaSemana,
   FichaActionErrorCode,
   FichaDto,
   FichaEntity,
@@ -24,6 +25,7 @@ import type {
   FichaResponse,
   FichaSeguimientoEntity,
   FichasResponse,
+  JornadaFormacion,
   NovedadCompetenciaEntity,
   ProgramacionCompetenciaEntity,
   SeguimientoCompetenciaEstado,
@@ -61,6 +63,17 @@ function getFichaStore(): FichaEntity[] {
   globalForFichaStore.fichaStore ??= [];
 
   globalForFichaStore.fichaStore.forEach((ficha) => {
+    const legacyFicha = ficha as FichaEntity & {
+      diasFormacion?: DiaSemana[];
+      horaInicio?: string;
+      horaFin?: string;
+    };
+
+    ficha.jornadas ??= (legacyFicha.diasFormacion ?? []).map((dia) => ({
+      dia,
+      horaInicio: legacyFicha.horaInicio ?? "07:00",
+      horaFin: legacyFicha.horaFin ?? "13:00",
+    }));
     ficha.seguimientos.forEach((seguimiento) => {
       seguimiento.programaciones ??= [];
       seguimiento.novedades ??= [];
@@ -164,9 +177,7 @@ export class FichaService {
       municipio: data.municipio,
       sede: this.normalizeOptional(data.sede),
       modalidad: this.normalizeOptional(data.modalidad),
-      diasFormacion: [...data.diasFormacion],
-      horaInicio: data.horaInicio,
-      horaFin: data.horaFin,
+      jornadas: this.cloneJornadas(data.jornadas),
       fechaInicio: this.parseDate(data.fechaInicio),
       fechaFinLectiva: this.parseDate(data.fechaFinLectiva),
       fechaFinPractica: this.parseDate(data.fechaFinPractica),
@@ -463,9 +474,7 @@ export class FichaService {
       sede: data.sede !== undefined ? data.sede : ficha.sede,
       modalidad:
         data.modalidad !== undefined ? data.modalidad : ficha.modalidad,
-      diasFormacion: data.diasFormacion ?? ficha.diasFormacion,
-      horaInicio: data.horaInicio ?? ficha.horaInicio,
-      horaFin: data.horaFin ?? ficha.horaFin,
+      jornadas: data.jornadas ?? ficha.jornadas,
       fechaInicio: data.fechaInicio ?? this.formatDate(ficha.fechaInicio),
       fechaFinLectiva:
         data.fechaFinLectiva ?? this.formatDate(ficha.fechaFinLectiva),
@@ -476,15 +485,14 @@ export class FichaService {
           ? data.observaciones
           : ficha.observaciones,
     });
+    this.validateExistingProgramming(ficha, mergedData);
     const previousStartDate = this.formatDate(ficha.fechaInicio);
 
     ficha.numero = mergedData.numero;
     ficha.municipio = mergedData.municipio;
     ficha.sede = this.normalizeOptional(mergedData.sede);
     ficha.modalidad = this.normalizeOptional(mergedData.modalidad);
-    ficha.diasFormacion = [...mergedData.diasFormacion];
-    ficha.horaInicio = mergedData.horaInicio;
-    ficha.horaFin = mergedData.horaFin;
+    ficha.jornadas = this.cloneJornadas(mergedData.jornadas);
     ficha.fechaInicio = this.parseDate(mergedData.fechaInicio);
     ficha.fechaFinLectiva = this.parseDate(mergedData.fechaFinLectiva);
     ficha.fechaFinPractica = this.parseDate(mergedData.fechaFinPractica);
@@ -709,7 +717,11 @@ export class FichaService {
     }
 
     data.bloques.forEach((bloque) => {
-      if (!ficha.diasFormacion.includes(bloque.dia)) {
+      const jornada = ficha.jornadas.find(
+        (item) => item.dia === bloque.dia,
+      );
+
+      if (!jornada) {
         throw new FichaServiceError(
           "INVALID_SCHEDULE",
           "Todos los días deben pertenecer a la jornada de la ficha.",
@@ -717,8 +729,8 @@ export class FichaService {
       }
 
       if (
-        bloque.horaInicio < ficha.horaInicio ||
-        bloque.horaFin > ficha.horaFin
+        bloque.horaInicio < jornada.horaInicio ||
+        bloque.horaFin > jornada.horaFin
       ) {
         throw new FichaServiceError(
           "INVALID_SCHEDULE",
@@ -760,6 +772,47 @@ export class FichaService {
     );
 
     return horasProgramadas;
+  }
+
+  private validateExistingProgramming(
+    ficha: FichaEntity,
+    data: CreateFichaDto,
+  ): void {
+    for (const seguimiento of ficha.seguimientos) {
+      const allowedEndDate =
+        seguimiento.competenciaTipo === COMPETENCIA_TIPO.PRACTICA
+          ? data.fechaFinPractica
+          : data.fechaFinLectiva;
+
+      for (const programacion of seguimiento.programaciones) {
+        if (
+          this.formatDate(programacion.fechaInicio) < data.fechaInicio ||
+          this.formatDate(programacion.fechaFin) > allowedEndDate
+        ) {
+          throw new FichaServiceError(
+            "INVALID_SCHEDULE",
+            "La modificación dejaría una programación existente fuera del periodo de la ficha.",
+          );
+        }
+
+        for (const bloque of programacion.bloques) {
+          const jornada = data.jornadas.find(
+            (item) => item.dia === bloque.dia,
+          );
+
+          if (
+            !jornada ||
+            bloque.horaInicio < jornada.horaInicio ||
+            bloque.horaFin > jornada.horaFin
+          ) {
+            throw new FichaServiceError(
+              "INVALID_SCHEDULE",
+              "La modificación dejaría una programación existente fuera de la jornada permitida.",
+            );
+          }
+        }
+      }
+    }
   }
 
   private ensureBlocksDoNotOverlap(data: CreateProgramacionDto): void {
@@ -937,10 +990,23 @@ export class FichaService {
     return normalized ? normalized : null;
   }
 
+  private cloneJornadas(
+    jornadas: readonly JornadaFormacion[],
+  ): JornadaFormacion[] {
+    const dayOrder = Object.values(DIA_SEMANA);
+
+    return jornadas
+      .map((jornada) => ({ ...jornada }))
+      .sort(
+        (first, second) =>
+          dayOrder.indexOf(first.dia) - dayOrder.indexOf(second.dia),
+      );
+  }
+
   private toDto(ficha: FichaEntity): FichaDto {
     return {
       ...ficha,
-      diasFormacion: [...ficha.diasFormacion],
+      jornadas: this.cloneJornadas(ficha.jornadas),
       liderHistorial: ficha.liderHistorial.map((assignment) => ({
         ...assignment,
         fechaInicio: this.formatDate(assignment.fechaInicio),

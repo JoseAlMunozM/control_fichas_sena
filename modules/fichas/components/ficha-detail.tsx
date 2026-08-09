@@ -246,11 +246,7 @@ export function FichaDetail({
 
         <Card title="Jornada permitida">
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            {formatFichaSchedule(
-              ficha.diasFormacion,
-              ficha.horaInicio,
-              ficha.horaFin,
-            )}
+            {formatFichaSchedule(ficha.jornadas)}
           </p>
           <p className="mt-2 text-xs leading-5 text-zinc-500">
             Las programaciones futuras deberán estar dentro de esta jornada.

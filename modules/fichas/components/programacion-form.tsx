@@ -12,7 +12,7 @@ import type {
   FichaDto,
   FichaSeguimientoDto,
 } from "../types";
-import { calculateProgrammedHours } from "../utils";
+import { calculateProgrammedHours, formatFichaSchedule } from "../utils";
 
 export interface ProgramacionBlockFormValue {
   key: string;
@@ -44,6 +44,12 @@ export interface ProgramacionFormProps {
 export function createEmptyProgramacionForm(
   ficha: FichaDto,
 ): ProgramacionFormValue {
+  const defaultSchedule = ficha.jornadas[0] ?? {
+    dia: "LUNES" as const,
+    horaInicio: "07:00",
+    horaFin: "13:00",
+  };
+
   return {
     instructorId: "",
     fechaInicio: ficha.fechaInicio,
@@ -51,9 +57,9 @@ export function createEmptyProgramacionForm(
     bloques: [
       {
         key: "initial-block",
-        dia: ficha.diasFormacion[0] ?? "LUNES",
-        horaInicio: ficha.horaInicio,
-        horaFin: ficha.horaFin,
+        dia: defaultSchedule.dia,
+        horaInicio: defaultSchedule.horaInicio,
+        horaFin: defaultSchedule.horaFin,
       },
     ],
   };
@@ -91,14 +97,14 @@ export function ProgramacionForm({
     label: `${instructor.nombre} · ${instructor.correo}`,
     value: instructor.id,
   }));
-  const dayOptions = ficha.diasFormacion.map((day) => ({
-    label: DIA_SEMANA_LABELS[day],
-    value: day,
+  const dayOptions = ficha.jornadas.map((jornada) => ({
+    label: DIA_SEMANA_LABELS[jornada.dia],
+    value: jornada.dia,
   }));
 
   const updateBlock = (
     key: string,
-    field: Exclude<keyof ProgramacionBlockFormValue, "key">,
+    field: "horaInicio" | "horaFin",
     nextValue: string,
   ) => {
     onChange({
@@ -106,6 +112,45 @@ export function ProgramacionForm({
       bloques: value.bloques.map((block) =>
         block.key === key ? { ...block, [field]: nextValue } : block,
       ),
+    });
+  };
+
+  const updateBlockDay = (key: string, day: DiaSemana) => {
+    const jornada = ficha.jornadas.find((item) => item.dia === day);
+
+    if (!jornada) return;
+
+    onChange({
+      ...value,
+      bloques: value.bloques.map((block) =>
+        block.key === key
+          ? {
+              ...block,
+              dia: day,
+              horaInicio: jornada.horaInicio,
+              horaFin: jornada.horaFin,
+            }
+          : block,
+      ),
+    });
+  };
+
+  const addBlock = () => {
+    const jornada = ficha.jornadas[0];
+
+    if (!jornada) return;
+
+    onChange({
+      ...value,
+      bloques: [
+        ...value.bloques,
+        {
+          key: crypto.randomUUID(),
+          dia: jornada.dia,
+          horaInicio: jornada.horaInicio,
+          horaFin: jornada.horaFin,
+        },
+      ],
     });
   };
 
@@ -188,25 +233,12 @@ export function ProgramacionForm({
               Bloques semanales
             </h3>
             <p className="text-xs text-zinc-500">
-              Jornada permitida: {ficha.horaInicio}–{ficha.horaFin}
+              Jornada permitida: {formatFichaSchedule(ficha.jornadas)}
             </p>
           </div>
           <Button
-            disabled={isSubmitting}
-            onClick={() =>
-              onChange({
-                ...value,
-                bloques: [
-                  ...value.bloques,
-                  {
-                    key: crypto.randomUUID(),
-                    dia: ficha.diasFormacion[0] ?? "LUNES",
-                    horaInicio: ficha.horaInicio,
-                    horaFin: ficha.horaFin,
-                  },
-                ],
-              })
-            }
+            disabled={isSubmitting || ficha.jornadas.length === 0}
+            onClick={addBlock}
             size="sm"
             variant="secondary"
           >
@@ -214,61 +246,67 @@ export function ProgramacionForm({
           </Button>
         </div>
 
-        {value.bloques.map((block) => (
-          <div
-            className="grid gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
-            key={block.key}
-          >
-            <Select
-              disabled={isSubmitting}
-              label="Día"
-              onChange={(event) =>
-                updateBlock(block.key, "dia", event.target.value)
-              }
-              options={dayOptions}
-              value={block.dia}
-            />
-            <Input
-              disabled={isSubmitting}
-              label="Desde"
-              max={ficha.horaFin}
-              min={ficha.horaInicio}
-              onChange={(event) =>
-                updateBlock(block.key, "horaInicio", event.target.value)
-              }
-              required
-              type="time"
-              value={block.horaInicio}
-            />
-            <Input
-              disabled={isSubmitting}
-              label="Hasta"
-              max={ficha.horaFin}
-              min={ficha.horaInicio}
-              onChange={(event) =>
-                updateBlock(block.key, "horaFin", event.target.value)
-              }
-              required
-              type="time"
-              value={block.horaFin}
-            />
-            <Button
-              disabled={isSubmitting || value.bloques.length === 1}
-              onClick={() =>
-                onChange({
-                  ...value,
-                  bloques: value.bloques.filter(
-                    (item) => item.key !== block.key,
-                  ),
-                })
-              }
-              size="sm"
-              variant="ghost"
+        {value.bloques.map((block) => {
+          const jornada = ficha.jornadas.find(
+            (item) => item.dia === block.dia,
+          );
+
+          return (
+            <div
+              className="grid gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
+              key={block.key}
             >
-              Quitar
-            </Button>
-          </div>
-        ))}
+              <Select
+                disabled={isSubmitting}
+                label="Día"
+                onChange={(event) =>
+                  updateBlockDay(block.key, event.target.value as DiaSemana)
+                }
+                options={dayOptions}
+                value={block.dia}
+              />
+              <Input
+                disabled={isSubmitting}
+                label="Desde"
+                max={jornada?.horaFin}
+                min={jornada?.horaInicio}
+                onChange={(event) =>
+                  updateBlock(block.key, "horaInicio", event.target.value)
+                }
+                required
+                type="time"
+                value={block.horaInicio}
+              />
+              <Input
+                disabled={isSubmitting}
+                label="Hasta"
+                max={jornada?.horaFin}
+                min={jornada?.horaInicio}
+                onChange={(event) =>
+                  updateBlock(block.key, "horaFin", event.target.value)
+                }
+                required
+                type="time"
+                value={block.horaFin}
+              />
+              <Button
+                disabled={isSubmitting || value.bloques.length === 1}
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    bloques: value.bloques.filter(
+                      (item) => item.key !== block.key,
+                    ),
+                  })
+                }
+                size="sm"
+                variant="ghost"
+              >
+                Quitar
+              </Button>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid gap-3 rounded-lg bg-zinc-50 p-4 text-sm dark:bg-zinc-950/60 sm:grid-cols-3">
@@ -293,11 +331,7 @@ export function ProgramacionForm({
       </div>
 
       <div className="flex justify-end gap-3">
-        <Button
-          disabled={isSubmitting}
-          onClick={onCancel}
-          variant="secondary"
-        >
+        <Button disabled={isSubmitting} onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
         <Button isLoading={isSubmitting} type="submit">

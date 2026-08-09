@@ -1,6 +1,7 @@
 import type {
   DiaSemana,
   FichaEstado,
+  JornadaFormacion,
   SeguimientoCompetenciaEstado,
 } from "@/modules/fichas/types";
 import type { CompetenciaTipo } from "@/modules/programas/types";
@@ -40,9 +41,7 @@ export interface DashboardFichaDto {
   planVersion: string;
   municipio: string;
   sede: string | null;
-  diasFormacion: readonly DiaSemana[];
-  horaInicio: string;
-  horaFin: string;
+  jornadas: readonly JornadaFormacion[];
   fechaInicio: string;
   fechaFinLectiva: string;
   fechaFinPractica: string;

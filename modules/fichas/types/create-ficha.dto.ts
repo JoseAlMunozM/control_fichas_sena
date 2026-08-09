@@ -1,4 +1,4 @@
-import type { DiaSemana } from "./ficha.entity";
+import type { JornadaFormacion } from "./ficha.entity";
 
 export interface CreateFichaDto {
   numero: string;
@@ -7,9 +7,7 @@ export interface CreateFichaDto {
   municipio: string;
   sede?: string | null;
   modalidad?: string | null;
-  diasFormacion: DiaSemana[];
-  horaInicio: string;
-  horaFin: string;
+  jornadas: JornadaFormacion[];
   fechaInicio: string;
   fechaFinLectiva: string;
   fechaFinPractica: string;

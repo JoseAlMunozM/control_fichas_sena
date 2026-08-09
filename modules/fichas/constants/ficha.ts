@@ -1,6 +1,7 @@
 import type {
   DiaSemana,
   FichaEstado,
+  JornadaFormacion,
   NovedadCompetenciaTipo,
   SeguimientoCompetenciaEstado,
 } from "../types";
@@ -59,13 +60,13 @@ export const DIA_SEMANA_LABELS = {
   [DIA_SEMANA.DOMINGO]: "Domingo",
 } as const satisfies Record<DiaSemana, string>;
 
-export const DEFAULT_DIAS_FORMACION: DiaSemana[] = [
+export const DEFAULT_JORNADAS_FORMACION: JornadaFormacion[] = [
   DIA_SEMANA.LUNES,
   DIA_SEMANA.MARTES,
   DIA_SEMANA.MIERCOLES,
   DIA_SEMANA.JUEVES,
   DIA_SEMANA.VIERNES,
-];
+].map((dia) => ({ dia, horaInicio: "07:00", horaFin: "13:00" }));
 
 export const FICHA_FIELD_LIMITS = {
   numero: 30,

@@ -219,11 +219,7 @@ export function ControlGeneralMatrix({ fichas }: ControlGeneralMatrixProps) {
                   ) : null}
                 </td>
                 <td className="sticky left-[480px] z-10 w-[180px] min-w-[180px] whitespace-normal border-r border-zinc-200 bg-white px-4 py-3 align-top group-hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:group-hover:bg-zinc-800">
-                  {formatFichaSchedule(
-                    ficha.diasFormacion,
-                    ficha.horaInicio,
-                    ficha.horaFin,
-                  )}
+                  {formatFichaSchedule(ficha.jornadas)}
                 </td>
                 <td className="w-[220px] min-w-[220px] border-r border-zinc-200 px-4 py-3 align-top dark:border-zinc-800">
                   <div className="space-y-1 text-xs">

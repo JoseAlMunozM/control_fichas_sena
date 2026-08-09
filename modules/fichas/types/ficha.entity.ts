@@ -31,6 +31,12 @@ export type NovedadCompetenciaTipo =
   | "SUSPENSION"
   | "OTRA";
 
+export interface JornadaFormacion {
+  dia: DiaSemana;
+  horaInicio: string;
+  horaFin: string;
+}
+
 export interface FichaSeguimientoEntity {
   id: string;
   competenciaId: string;
@@ -101,9 +107,7 @@ export interface FichaEntity {
   municipio: string;
   sede: string | null;
   modalidad: string | null;
-  diasFormacion: DiaSemana[];
-  horaInicio: string;
-  horaFin: string;
+  jornadas: JornadaFormacion[];
   fechaInicio: Date;
   fechaFinLectiva: Date;
   fechaFinPractica: Date;

@@ -2,16 +2,11 @@
 
 import type { FormEventHandler } from "react";
 
-import {
-  Button,
-  Input,
-  Select,
-  Textarea,
-} from "@/components/ui";
+import { Button, Input, Select, Textarea } from "@/components/ui";
 import type { ProgramaDto } from "@/modules/programas/types";
 
 import {
-  DEFAULT_DIAS_FORMACION,
+  DEFAULT_JORNADAS_FORMACION,
   DIA_SEMANA,
   DIA_SEMANA_LABELS,
   FICHA_ESTADO,
@@ -21,6 +16,7 @@ import type {
   CreateFichaDto,
   DiaSemana,
   FichaEstado,
+  JornadaFormacion,
 } from "../types";
 
 export interface FichaFormValue extends CreateFichaDto {
@@ -58,9 +54,7 @@ export const emptyFichaForm: FichaFormValue = {
   municipio: "",
   sede: "",
   modalidad: "",
-  diasFormacion: [...DEFAULT_DIAS_FORMACION],
-  horaInicio: "07:00",
-  horaFin: "13:00",
+  jornadas: DEFAULT_JORNADAS_FORMACION.map((jornada) => ({ ...jornada })),
   fechaInicio: "",
   fechaFinLectiva: "",
   fechaFinPractica: "",
@@ -91,11 +85,29 @@ export function FichaForm({
   }));
 
   const toggleDay = (day: DiaSemana) => {
-    const selectedDays = value.diasFormacion.includes(day)
-      ? value.diasFormacion.filter((currentDay) => currentDay !== day)
-      : [...value.diasFormacion, day];
+    const existing = value.jornadas.some((jornada) => jornada.dia === day);
+    const jornadas = existing
+      ? value.jornadas.filter((jornada) => jornada.dia !== day)
+      : [...value.jornadas, { dia: day, horaInicio: "07:00", horaFin: "13:00" }]
+          .sort(
+            (first, second) =>
+              dayOptions.indexOf(first.dia) - dayOptions.indexOf(second.dia),
+          );
 
-    onChange("diasFormacion", selectedDays);
+    onChange("jornadas", jornadas);
+  };
+
+  const updateJornada = (
+    day: DiaSemana,
+    field: keyof Pick<JornadaFormacion, "horaInicio" | "horaFin">,
+    nextValue: string,
+  ) => {
+    onChange(
+      "jornadas",
+      value.jornadas.map((jornada) =>
+        jornada.dia === day ? { ...jornada, [field]: nextValue } : jornada,
+      ),
+    );
   };
 
   return (
@@ -145,9 +157,7 @@ export function FichaForm({
           value={value.programaId}
         />
         <Select
-          disabled={
-            isSubmitting || mode === "edit" || !selectedProgram
-          }
+          disabled={isSubmitting || mode === "edit" || !selectedProgram}
           error={errors.planId}
           helperText="Las competencias se copiarán desde esta versión."
           label="Versión del plan"
@@ -180,23 +190,26 @@ export function FichaForm({
           error={errors.modalidad}
           label="Modalidad"
           onChange={(event) => onChange("modalidad", event.target.value)}
-          placeholder="Ejemplo: Campesena"
+          placeholder="Ejemplo: Presencial"
           value={value.modalidad ?? ""}
         />
       </div>
 
       <fieldset>
         <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Días de formación
+          Jornadas de formación
         </legend>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <p className="mt-1 text-xs text-zinc-500">
+          Selecciona los días y define el horario permitido para cada uno.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
           {dayOptions.map((day) => (
             <label
               className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
               key={day}
             >
               <input
-                checked={value.diasFormacion.includes(day)}
+                checked={value.jornadas.some((jornada) => jornada.dia === day)}
                 disabled={isSubmitting}
                 onChange={() => toggleDay(day)}
                 type="checkbox"
@@ -205,33 +218,45 @@ export function FichaForm({
             </label>
           ))}
         </div>
-        {errors.diasFormacion ? (
-          <p className="mt-1.5 text-xs text-red-600">
-            {errors.diasFormacion}
-          </p>
+
+        {value.jornadas.length > 0 ? (
+          <div className="mt-4 space-y-3">
+            {value.jornadas.map((jornada) => (
+              <div
+                className="grid gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800 sm:grid-cols-[1fr_1fr_1fr] sm:items-end"
+                key={jornada.dia}
+              >
+                <p className="pb-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                  {DIA_SEMANA_LABELS[jornada.dia]}
+                </p>
+                <Input
+                  disabled={isSubmitting}
+                  label="Desde"
+                  onChange={(event) =>
+                    updateJornada(jornada.dia, "horaInicio", event.target.value)
+                  }
+                  required
+                  type="time"
+                  value={jornada.horaInicio}
+                />
+                <Input
+                  disabled={isSubmitting}
+                  label="Hasta"
+                  onChange={(event) =>
+                    updateJornada(jornada.dia, "horaFin", event.target.value)
+                  }
+                  required
+                  type="time"
+                  value={jornada.horaFin}
+                />
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {errors.jornadas ? (
+          <p className="mt-1.5 text-xs text-red-600">{errors.jornadas}</p>
         ) : null}
       </fieldset>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Input
-          disabled={isSubmitting}
-          error={errors.horaInicio}
-          label="Hora inicial"
-          onChange={(event) => onChange("horaInicio", event.target.value)}
-          required
-          type="time"
-          value={value.horaInicio}
-        />
-        <Input
-          disabled={isSubmitting}
-          error={errors.horaFin}
-          label="Hora final"
-          onChange={(event) => onChange("horaFin", event.target.value)}
-          required
-          type="time"
-          value={value.horaFin}
-        />
-      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Input
@@ -271,19 +296,13 @@ export function FichaForm({
         disabled={isSubmitting}
         error={errors.observaciones}
         label="Observaciones"
-        onChange={(event) =>
-          onChange("observaciones", event.target.value)
-        }
+        onChange={(event) => onChange("observaciones", event.target.value)}
         rows={3}
         value={value.observaciones ?? ""}
       />
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button
-          disabled={isSubmitting}
-          onClick={onCancel}
-          variant="secondary"
-        >
+        <Button disabled={isSubmitting} onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
         <Button isLoading={isSubmitting} type="submit">
