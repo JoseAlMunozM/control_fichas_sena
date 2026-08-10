@@ -8,7 +8,7 @@ import type { NavigationMenu } from "@/types";
 import { Button } from "@/components/ui";
 import { cn, matchesRoute } from "@/utils";
 
-import { CloseIcon } from "./icons";
+import { CloseIcon, NAVIGATION_ICONS } from "./icons";
 
 export interface SidebarProps {
   isOpen: boolean;
@@ -76,6 +76,9 @@ export function Sidebar({
               <ul className="space-y-1">
                 {menu.items.map((item) => {
                   const isActive = matchesRoute(pathname, item);
+                  const NavigationIcon = item.navigation?.icon
+                    ? NAVIGATION_ICONS[item.navigation.icon]
+                    : null;
 
                   return (
                     <li key={item.path}>
@@ -90,15 +93,16 @@ export function Sidebar({
                         href={item.path}
                         onClick={onClose}
                       >
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            "size-2 rounded-full",
-                            isActive
-                              ? "bg-emerald-600 dark:bg-emerald-400"
-                              : "bg-zinc-300 dark:bg-zinc-700",
-                          )}
-                        />
+                        {NavigationIcon ? (
+                          <NavigationIcon
+                            className={cn(
+                              "size-5 shrink-0",
+                              isActive
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-zinc-400 dark:text-zinc-500",
+                            )}
+                          />
+                        ) : null}
                         {item.label}
                       </Link>
                     </li>

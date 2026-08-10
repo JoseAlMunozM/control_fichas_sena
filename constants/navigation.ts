@@ -37,6 +37,7 @@ export const ROUTE_CONFIG = [
     navigation: {
       menuId: "general",
       order: 1,
+      icon: "home",
     },
   },
   {
@@ -58,6 +59,7 @@ export const ROUTE_CONFIG = [
     navigation: {
       menuId: "general",
       order: 2,
+      icon: "dashboard",
     },
   },
   {
@@ -67,6 +69,7 @@ export const ROUTE_CONFIG = [
     navigation: {
       menuId: "academic",
       order: 1,
+      icon: "fichas",
     },
   },
   {
@@ -76,6 +79,7 @@ export const ROUTE_CONFIG = [
     navigation: {
       menuId: "academic",
       order: 2,
+      icon: "programas",
     },
   },
   {
@@ -85,6 +89,7 @@ export const ROUTE_CONFIG = [
     navigation: {
       menuId: "people",
       order: 1,
+      icon: "instructores",
     },
   },
   {
@@ -94,6 +99,7 @@ export const ROUTE_CONFIG = [
     navigation: {
       menuId: "tracking",
       order: 1,
+      icon: "prorrogas",
     },
   },
 ] as const satisfies readonly AppRouteConfig[];
