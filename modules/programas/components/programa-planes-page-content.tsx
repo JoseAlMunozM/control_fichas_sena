@@ -83,10 +83,20 @@ export function ProgramaPlanesPageContent({
   };
 
   const handlePlanSaved = (updatedPrograma: ProgramaDto) => {
-    handleProgramUpdated(updatedPrograma);
-    const activePlan = updatedPrograma.planes.find((plan) => plan.estado);
+    const previousPlanIds = new Set(
+      programa.planes.map((plan) => plan.id),
+    );
+    const savedPlan =
+      planModal?.mode === "edit"
+        ? updatedPrograma.planes.find(
+            (plan) => plan.id === planModal.plan.id,
+          )
+        : updatedPrograma.planes.find(
+            (plan) => !previousPlanIds.has(plan.id),
+          );
 
-    if (activePlan) setSelectedPlanId(activePlan.id);
+    handleProgramUpdated(updatedPrograma);
+    if (savedPlan) setSelectedPlanId(savedPlan.id);
     setPlanModal(null);
   };
 

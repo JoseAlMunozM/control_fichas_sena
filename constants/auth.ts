@@ -13,5 +13,5 @@ export const AUTH_ROUTES = {
   apiPrefix: "/api/auth",
   signIn: "/login",
   setup: "/setup",
-  afterSignIn: ROUTE_PATHS.dashboard,
+  afterSignIn: ROUTE_PATHS.home,
 } as const;

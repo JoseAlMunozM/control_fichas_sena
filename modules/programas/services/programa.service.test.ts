@@ -59,4 +59,32 @@ describe("ProgramaService", () => {
       orden: 1,
     });
   });
+
+  it("permite crear varias versiones y conserva una sola activa", async () => {
+    const programa = (
+      await programaService.create({
+        codigo: "999002",
+        nombre: "Programa con versiones",
+      })
+    ).data;
+
+    const firstVersion = (
+      await programaService.createPlan(programa.id, {
+        version: "V1",
+      })
+    ).data;
+    const secondVersion = (
+      await programaService.createPlan(programa.id, {
+        version: "V2",
+        estado: true,
+      })
+    ).data;
+
+    expect(firstVersion.planes).toHaveLength(1);
+    expect(secondVersion.planes).toHaveLength(2);
+    expect(secondVersion.planes.find((plan) => plan.version === "V1")?.estado)
+      .toBe(false);
+    expect(secondVersion.planes.find((plan) => plan.version === "V2")?.estado)
+      .toBe(true);
+  });
 });
