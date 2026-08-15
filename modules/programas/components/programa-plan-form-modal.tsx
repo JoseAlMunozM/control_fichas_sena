@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { Button, Input, Modal, Select } from "@/components/ui";
+import { Alert, Button, Input, Modal, Select } from "@/components/ui";
 
 import {
   createPlanFormacionAction,
@@ -68,7 +68,9 @@ export function ProgramaPlanFormModal({
 
       onSaved(result.value.data);
     } catch {
-      setErrorMessage("No fue posible guardar el plan de formación.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar la versión.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -83,12 +85,9 @@ export function ProgramaPlanFormModal({
     >
       <form className="space-y-5" onSubmit={handleSubmit}>
         {errorMessage ? (
-          <p
-            className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
-            role="alert"
-          >
+          <Alert title="No se pudo guardar la versión">
             {errorMessage}
-          </p>
+          </Alert>
         ) : null}
 
         <Input

@@ -6,8 +6,8 @@ import {
 } from "react";
 
 import {
+  Alert,
   Button,
-  Card,
   ConfirmDialog,
   Pagination,
 } from "@/components/ui";
@@ -162,7 +162,9 @@ export function ProgramasPageContent({
 
       return true;
     } catch {
-      setErrorMessage("No fue posible cargar los programas.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión, actualiza la página e intenta cargar los programas nuevamente.",
+      );
       return false;
     } finally {
       setIsLoading(false);
@@ -222,7 +224,9 @@ export function ProgramasPageContent({
       setEditingPrograma(null);
       await refreshProgramas(appliedFilters);
     } catch {
-      setErrorMessage("No fue posible guardar el programa.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar el programa.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +262,9 @@ export function ProgramasPageContent({
         page: nextPage,
       });
     } catch {
-      setErrorMessage("No fue posible eliminar el programa.");
+      setErrorMessage(
+        "La solicitud de eliminación no llegó al servidor. Actualiza la página y vuelve a intentarlo.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -282,14 +288,9 @@ export function ProgramasPageContent({
   };
 
   const errorAlert = errorMessage ? (
-    <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
+    <Alert title="No se pudo completar la acción">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <p
-          className="text-sm text-red-700 dark:text-red-300"
-          role="alert"
-        >
-          {errorMessage}
-        </p>
+        <p>{errorMessage}</p>
         <Button
           onClick={() => setErrorMessage(null)}
           size="sm"
@@ -298,7 +299,7 @@ export function ProgramasPageContent({
           Cerrar
         </Button>
       </div>
-    </Card>
+    </Alert>
   ) : null;
 
   return (

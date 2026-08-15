@@ -126,7 +126,7 @@ export class ProrrogaService {
     ) {
       throw new ProrrogaServiceError(
         "INVALID_DATES",
-        "No puedes solicitar una prórroga para una ficha finalizada o cancelada.",
+        "No se puede solicitar una prórroga porque la ficha está finalizada o cancelada. Solo las fichas activas pueden ampliar sus fechas.",
       );
     }
 
@@ -295,7 +295,7 @@ export class ProrrogaService {
     if (exists) {
       throw new ProrrogaServiceError(
         "DUPLICATE_PENDING",
-        "La ficha ya tiene una solicitud de prórroga pendiente.",
+        "La ficha ya tiene una solicitud de prórroga pendiente. Aprueba, rechaza o elimina esa solicitud antes de crear una nueva.",
       );
     }
   }
@@ -313,7 +313,7 @@ export class ProrrogaService {
     ) {
       throw new ProrrogaServiceError(
         "INVALID_DATES",
-        "Las nuevas fechas deben ampliar los finales lectivo y práctico actuales.",
+        "Las nuevas fechas deben ser posteriores a los finales lectivo y práctico actuales, y el nuevo fin práctico no puede quedar antes del fin lectivo.",
       );
     }
   }

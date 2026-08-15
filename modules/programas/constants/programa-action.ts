@@ -1,4 +1,4 @@
 export const PROGRAMA_ACTION_MESSAGES = {
-  internalError: "No fue posible completar la operación.",
-  validationError: "Los datos enviados no son válidos.",
+  validationError:
+    "Revisa los datos del programa y corrige los campos señalados.",
 } as const;

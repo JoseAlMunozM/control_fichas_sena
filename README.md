@@ -6,6 +6,7 @@ El sistema reemplaza el seguimiento manual realizado en hojas de cálculo por un
 
 ## Contenido
 
+- [Manual completo de usuario](docs/MANUAL_USUARIO.md)
 - [Funciones principales](#funciones-principales)
 - [Tecnologías](#tecnologías)
 - [Arquitectura](#arquitectura)

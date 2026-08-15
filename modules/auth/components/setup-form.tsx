@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input } from "@/components/ui";
+import { Alert, Button, Input } from "@/components/ui";
 
 import { setupAction } from "../actions";
 import { useAuthFormState } from "../hooks";
@@ -11,12 +11,9 @@ export function SetupForm() {
   return (
     <form action={action} className="space-y-5">
       {state.message ? (
-        <p
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          role="alert"
-        >
+        <Alert title="No se pudo crear la cuenta inicial">
           {state.message}
-        </p>
+        </Alert>
       ) : null}
       <Input
         autoComplete="name"

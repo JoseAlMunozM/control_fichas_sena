@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { AUTH_ROUTES } from "@/constants";
 import { signIn, signOut } from "@/lib/auth";
+import { getKnownInfrastructureErrorMessage } from "@/utils/action-errors";
 
 import { AUTH_MESSAGES } from "../constants";
 import {
@@ -55,6 +56,13 @@ export async function loginAction(
       return mapError(error);
     }
 
+    const infrastructureMessage =
+      getKnownInfrastructureErrorMessage(error);
+
+    if (infrastructureMessage) {
+      return { message: infrastructureMessage };
+    }
+
     throw error;
   }
 
@@ -86,6 +94,13 @@ export async function setupAction(
       error instanceof z.ZodError
     ) {
       return mapError(error);
+    }
+
+    const infrastructureMessage =
+      getKnownInfrastructureErrorMessage(error);
+
+    if (infrastructureMessage) {
+      return { message: infrastructureMessage };
     }
 
     throw error;

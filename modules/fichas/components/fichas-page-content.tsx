@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import {
+  Alert,
   Button,
   Card,
   ConfirmDialog,
@@ -130,7 +131,9 @@ export function FichasPageContent({
 
       return true;
     } catch {
-      setErrorMessage("No fue posible cargar las fichas.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión, actualiza la página e intenta cargar las fichas nuevamente.",
+      );
       return false;
     } finally {
       setIsLoading(false);
@@ -221,7 +224,9 @@ export function FichasPageContent({
       setEditingFicha(null);
       await refreshFichas(appliedFilters);
     } catch {
-      setErrorMessage("No fue posible guardar la ficha.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar la ficha.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -248,7 +253,9 @@ export function FichasPageContent({
       setDeletingFicha(null);
       await refreshFichas({ ...appliedFilters, page: nextPage });
     } catch {
-      setErrorMessage("No fue posible eliminar la ficha.");
+      setErrorMessage(
+        "La solicitud de eliminación no llegó al servidor. Actualiza la página y vuelve a intentarlo.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -271,11 +278,9 @@ export function FichasPageContent({
       </div>
 
       {errorMessage && !isModalOpen ? (
-        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
-          <p className="text-sm text-red-700 dark:text-red-300" role="alert">
-            {errorMessage}
-          </p>
-        </Card>
+        <Alert title="No se pudo completar la acción">
+          {errorMessage}
+        </Alert>
       ) : null}
 
       <Card title="Filtros">
@@ -387,12 +392,9 @@ export function FichasPageContent({
         title={editingFicha ? "Editar ficha" : "Crear ficha"}
       >
         {errorMessage ? (
-          <p
-            className="mb-5 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
-            role="alert"
-          >
+          <Alert className="mb-5" title="No se pudo guardar la ficha">
             {errorMessage}
-          </p>
+          </Alert>
         ) : null}
         <FichaForm
           errors={formErrors}

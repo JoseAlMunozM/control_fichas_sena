@@ -327,7 +327,7 @@ export class InstructorService {
     if (exists) {
       throw new InstructorServiceError(
         "DUPLICATE_EMAIL",
-        "Ya existe un instructor con ese correo institucional.",
+        "Ya existe un instructor con ese correo institucional. Búscalo en el listado y edita su información en lugar de crear otro.",
       );
     }
   }
@@ -347,7 +347,7 @@ export class InstructorService {
     if (overlaps) {
       throw new InstructorServiceError(
         "CONTRACT_OVERLAP",
-        "Las fechas del nuevo contrato se superponen con otro contrato del instructor.",
+        "Las fechas del nuevo contrato se superponen con un contrato existente. Revisa el histórico y haz que la renovación comience después de finalizar el contrato anterior.",
       );
     }
   }

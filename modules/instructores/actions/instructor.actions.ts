@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireAuth } from "@/lib/auth/authorization";
+import {
+  getUnexpectedActionMessage,
+  getValidationErrorDetails,
+} from "@/utils/action-errors";
 
 import {
   instructorService,
@@ -23,14 +27,28 @@ import {
   updateInstructorSchema,
 } from "../validators";
 
+const VALIDATION_FIELD_LABELS = {
+  nombre: "Nombre completo",
+  correo: "Correo institucional",
+  telefono: "Teléfono",
+  observaciones: "Observaciones",
+  fechaInicioContrato: "Inicio del contrato",
+  fechaFinContrato: "Finalización del contrato",
+  fechaInicio: "Inicio del nuevo contrato",
+  fechaFin: "Finalización del nuevo contrato",
+} as const;
+
 function mapError(error: unknown): InstructorActionError {
   if (error instanceof z.ZodError) {
-    const flattened = z.flattenError(error);
+    const details = getValidationErrorDetails(
+      error,
+      "Revisa los datos del instructor y corrige los campos señalados.",
+      VALIDATION_FIELD_LABELS,
+    );
 
     return {
       code: "VALIDATION_ERROR",
-      message: flattened.formErrors[0] ?? "Los datos no son válidos.",
-      fieldErrors: flattened.fieldErrors,
+      ...details,
     };
   }
 
@@ -40,7 +58,10 @@ function mapError(error: unknown): InstructorActionError {
 
   return {
     code: "INTERNAL_ERROR",
-    message: "No fue posible completar la operación.",
+    message: getUnexpectedActionMessage(
+      error,
+      "Ocurrió un error inesperado al procesar el instructor. Actualiza la página e inténtalo nuevamente.",
+    ),
   };
 }
 

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import {
+  Alert,
   Button,
   Input,
   Modal,
@@ -85,7 +86,9 @@ export function ProgramaCompetenciaFormModal({
 
       onSaved(result.value.data);
     } catch {
-      setErrorMessage("No fue posible guardar la competencia.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar la competencia.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -101,12 +104,9 @@ export function ProgramaCompetenciaFormModal({
     >
       <form className="space-y-5" onSubmit={handleSubmit}>
         {errorMessage ? (
-          <p
-            className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
-            role="alert"
-          >
+          <Alert title="No se pudo guardar la competencia">
             {errorMessage}
-          </p>
+          </Alert>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { Button, EmptyState, Input, Modal } from "@/components/ui";
+import { Alert, Button, EmptyState, Input, Modal } from "@/components/ui";
 
 import { addInstructorContractAction } from "../actions";
 import type {
@@ -55,7 +55,9 @@ export function InstructorContractModal({
 
       onSaved(result.value.data);
     } catch {
-      setErrorMessage("No fue posible registrar el contrato.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a registrar el contrato.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -71,12 +73,9 @@ export function InstructorContractModal({
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
         {errorMessage ? (
-          <p
-            className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300"
-            role="alert"
-          >
+          <Alert title="No se pudo registrar el contrato">
             {errorMessage}
-          </p>
+          </Alert>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">

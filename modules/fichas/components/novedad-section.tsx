@@ -2,7 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 
-import { Badge, Button, Input, Select, Textarea } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Input,
+  Select,
+  Textarea,
+} from "@/components/ui";
 
 import {
   createNovedadAction,
@@ -108,7 +115,9 @@ export function NovedadSection({
       setEditing(null);
       setIsFormOpen(false);
     } catch {
-      setError("No fue posible guardar la novedad.");
+      setError(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar la novedad.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -132,7 +141,9 @@ export function NovedadSection({
 
       onFichaChange(result.value.data);
     } catch {
-      setError("No fue posible eliminar la novedad.");
+      setError(
+        "La solicitud de eliminación no llegó al servidor. Actualiza la página y vuelve a intentarlo.",
+      );
     } finally {
       setDeletingId(null);
     }
@@ -155,12 +166,7 @@ export function NovedadSection({
       </div>
 
       {error ? (
-        <p
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          role="alert"
-        >
-          {error}
-        </p>
+        <Alert title="No se pudo actualizar la novedad">{error}</Alert>
       ) : null}
 
       {isFormOpen ? (

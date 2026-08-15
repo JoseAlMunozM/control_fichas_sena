@@ -255,7 +255,7 @@ export class FichaService {
     if (!instructorResponse || !instructorResponse.data.estado) {
       throw new FichaServiceError(
         "INSTRUCTOR_NOT_FOUND",
-        "El instructor seleccionado no existe o está inactivo.",
+        "El instructor seleccionado no está disponible. Verifica que exista y tenga un contrato vigente antes de programarlo.",
       );
     }
 
@@ -315,7 +315,7 @@ export class FichaService {
     if (!instructorResponse || !instructorResponse.data.estado) {
       throw new FichaServiceError(
         "INSTRUCTOR_NOT_FOUND",
-        "El instructor seleccionado no existe o está inactivo.",
+        "El instructor seleccionado no está disponible. Verifica que exista y tenga un contrato vigente antes de programarlo.",
       );
     }
 
@@ -571,7 +571,7 @@ export class FichaService {
     if (!instructorResponse || !instructorResponse.data.estado) {
       throw new FichaServiceError(
         "INSTRUCTOR_NOT_FOUND",
-        "El nuevo instructor líder no existe o está inactivo.",
+        "El nuevo instructor líder no está disponible. Verifica que esté registrado y tenga un contrato vigente.",
       );
     }
 
@@ -750,7 +750,7 @@ export class FichaService {
     ) {
       throw new FichaServiceError(
         "INVALID_SCHEDULE",
-        "Las fechas deben estar dentro del periodo permitido para la ficha.",
+        `Las fechas deben estar entre ${this.formatDate(ficha.fechaInicio)} y ${allowedEndDate}. Ajusta el rango o aprueba una prórroga antes de programar fuera de ese periodo.`,
       );
     }
 
@@ -762,7 +762,7 @@ export class FichaService {
       if (!jornada) {
         throw new FichaServiceError(
           "INVALID_SCHEDULE",
-          "Todos los días deben pertenecer a la jornada de la ficha.",
+          "Uno de los días seleccionados no pertenece a la jornada de la ficha. Edita la ficha o selecciona únicamente días habilitados.",
         );
       }
 
@@ -772,7 +772,7 @@ export class FichaService {
       ) {
         throw new FichaServiceError(
           "INVALID_SCHEDULE",
-          "Todos los bloques deben estar dentro del horario de la ficha.",
+          "Uno de los bloques está fuera del horario permitido para la ficha. Ajusta las horas al intervalo mostrado en Jornada permitida.",
         );
       }
     });
@@ -788,7 +788,7 @@ export class FichaService {
     if (horasProgramadas <= 0) {
       throw new FichaServiceError(
         "INVALID_SCHEDULE",
-        "El rango seleccionado no contiene los días programados.",
+        "El rango de fechas no contiene ninguno de los días seleccionados. Amplía el rango o cambia los bloques semanales.",
       );
     }
 
@@ -799,7 +799,7 @@ export class FichaService {
     if (existingHours + horasProgramadas > seguimiento.horasPlan + 0.001) {
       throw new FichaServiceError(
         "HOURS_EXCEEDED",
-        `La programación supera las ${seguimiento.horasPlan} horas del plan.`,
+        `La programación dejaría ${existingHours + horasProgramadas} horas acumuladas, pero el plan permite ${seguimiento.horasPlan}. Reduce el rango, los días o la duración de los bloques.`,
       );
     }
 
@@ -829,7 +829,7 @@ export class FichaService {
         ) {
           throw new FichaServiceError(
             "INVALID_SCHEDULE",
-            "La modificación dejaría una programación existente fuera del periodo de la ficha.",
+            "No se pueden reducir las fechas porque una programación existente quedaría fuera del periodo. Ajusta primero esa programación.",
           );
         }
 
@@ -845,7 +845,7 @@ export class FichaService {
           ) {
             throw new FichaServiceError(
               "INVALID_SCHEDULE",
-              "La modificación dejaría una programación existente fuera de la jornada permitida.",
+              "No se puede reducir la jornada porque una programación existente quedaría fuera del horario. Ajusta primero esa programación.",
             );
           }
         }
@@ -901,9 +901,9 @@ export class FichaService {
       );
 
       if (hasOverlap) {
-        throw new FichaServiceError(
-          "INVALID_SCHEDULE",
-          "Los bloques de la programación no pueden cruzarse.",
+          throw new FichaServiceError(
+            "INVALID_SCHEDULE",
+            "Dos bloques de esta programación se cruzan entre sí. Ajusta sus horas para que no coincidan.",
         );
       }
     });
@@ -943,8 +943,8 @@ export class FichaService {
           if (hasOverlap) {
             const reason =
               ficha.id === currentFicha.id
-                ? `La ficha ${ficha.numero} ya tiene formación en ese horario.`
-                : `El instructor ya tiene formación asignada en la ficha ${ficha.numero}.`;
+                ? `La ficha ${ficha.numero} ya tiene otra competencia en ese horario. Cambia el bloque para evitar el cruce.`
+                : `El instructor ya tiene formación asignada en la ficha ${ficha.numero} durante ese horario. Selecciona otro instructor o cambia el bloque.`;
 
             throw new FichaServiceError("SCHEDULE_CONFLICT", reason);
           }
@@ -966,7 +966,7 @@ export class FichaService {
     ) {
       throw new FichaServiceError(
         "INVALID_SCHEDULE",
-        "Debes agregar una programación antes de usar este estado.",
+        "No puedes usar este estado sin una programación. Agrega al menos un segmento con instructor, fechas y horario.",
       );
     }
 
@@ -976,7 +976,7 @@ export class FichaService {
     ) {
       throw new FichaServiceError(
         "INVALID_SCHEDULE",
-        `Para finalizar deben estar programadas exactamente ${planHours} horas.`,
+        `Para finalizar deben estar programadas exactamente ${planHours} horas. Actualmente hay ${programmedHours}; ajusta los segmentos hasta completar el total.`,
       );
     }
 
@@ -986,7 +986,7 @@ export class FichaService {
     ) {
       throw new FichaServiceError(
         "INVALID_SCHEDULE",
-        "Una competencia con programación no puede volver a pendiente.",
+        "Una competencia con segmentos no puede volver a Pendiente. Elimina primero todas sus programaciones o selecciona otro estado.",
       );
     }
   }
@@ -1002,7 +1002,7 @@ export class FichaService {
     if (exists) {
       throw new FichaServiceError(
         "DUPLICATE_NUMBER",
-        "Ya existe una ficha con el número indicado.",
+        "Ya existe una ficha con ese número. Busca la ficha existente para editarla o utiliza un número diferente.",
       );
     }
   }

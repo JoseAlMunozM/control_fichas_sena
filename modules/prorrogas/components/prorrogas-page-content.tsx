@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import {
+  Alert,
   Button,
   Card,
   ConfirmDialog,
@@ -132,7 +133,9 @@ export function ProrrogasPageContent({
 
       return true;
     } catch {
-      setErrorMessage("No fue posible cargar las prórrogas.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión, actualiza la página e intenta cargar las prórrogas nuevamente.",
+      );
       return false;
     } finally {
       setIsLoading(false);
@@ -223,7 +226,9 @@ export function ProrrogasPageContent({
       setEditing(null);
       await refresh(appliedFilters);
     } catch {
-      setErrorMessage("No fue posible guardar la prórroga.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar la prórroga.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -274,7 +279,9 @@ export function ProrrogasPageContent({
       setResolving(null);
       await refresh(appliedFilters);
     } catch {
-      setErrorMessage("No fue posible resolver la prórroga.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a confirmar la decisión.",
+      );
     } finally {
       setIsResolving(false);
     }
@@ -297,7 +304,9 @@ export function ProrrogasPageContent({
       setDeleting(null);
       await refresh(appliedFilters);
     } catch {
-      setErrorMessage("No fue posible eliminar la prórroga.");
+      setErrorMessage(
+        "La solicitud de eliminación no llegó al servidor. Actualiza la página y vuelve a intentarlo.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -320,11 +329,9 @@ export function ProrrogasPageContent({
       </div>
 
       {errorMessage && !isFormModalOpen && !isResolutionModalOpen ? (
-        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
-          <p className="text-sm text-red-700 dark:text-red-300" role="alert">
-            {errorMessage}
-          </p>
-        </Card>
+        <Alert title="No se pudo completar la acción">
+          {errorMessage}
+        </Alert>
       ) : null}
 
       <Card title="Filtros">
@@ -396,12 +403,9 @@ export function ProrrogasPageContent({
         title={editing ? "Editar prórroga" : "Nueva prórroga"}
       >
         {errorMessage ? (
-          <p
-            className="mb-5 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-            role="alert"
-          >
+          <Alert className="mb-5" title="No se pudo guardar la prórroga">
             {errorMessage}
-          </p>
+          </Alert>
         ) : null}
         <ProrrogaForm
           errors={formErrors}
@@ -445,12 +449,9 @@ export function ProrrogasPageContent({
               </p>
             </div>
             {errorMessage ? (
-              <p
-                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-                role="alert"
-              >
+              <Alert title="No se pudo resolver la prórroga">
                 {errorMessage}
-              </p>
+              </Alert>
             ) : null}
             <Textarea
               disabled={isResolving}

@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
-import { Badge, Button, Input, Modal, Select, Textarea } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Input,
+  Modal,
+  Select,
+  Textarea,
+} from "@/components/ui";
 import type { InstructorDto } from "@/modules/instructores/types";
 
 import { changeFichaLeaderAction } from "../actions";
@@ -95,7 +103,9 @@ export function FichaLeaderHistoryModal({
       onFichaChange(result.value.data);
       setIsFormOpen(false);
     } catch {
-      setError("No fue posible cambiar el instructor líder.");
+      setError(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a confirmar el cambio de líder.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -113,12 +123,9 @@ export function FichaLeaderHistoryModal({
       {isFormOpen ? (
         <form className="space-y-5" onSubmit={handleSubmit}>
           {error ? (
-            <p
-              className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-              role="alert"
-            >
+            <Alert title="No se pudo cambiar el instructor líder">
               {error}
-            </p>
+            </Alert>
           ) : null}
           <div className="rounded-lg bg-zinc-50 p-4 text-sm dark:bg-zinc-950/60">
             <p className="text-zinc-500">Líder actual</p>
@@ -201,13 +208,13 @@ export function FichaLeaderHistoryModal({
           </div>
 
           {availableInstructors.length === 0 ? (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+            <Alert title="No hay otro líder disponible" variant="warning">
               Registra otro instructor activo en{" "}
               <Link className="font-semibold underline" href="/instructores">
                 Instructores
               </Link>{" "}
-              para realizar una rotación.
-            </p>
+              antes de realizar una rotación.
+            </Alert>
           ) : null}
 
           <div className="space-y-3">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { Badge, Button, Modal, Select } from "@/components/ui";
+import { Alert, Badge, Button, Modal, Select } from "@/components/ui";
 import type { InstructorDto } from "@/modules/instructores/types";
 
 import {
@@ -134,7 +134,9 @@ export function ProgramacionManagerModal({
       setEditing(null);
       setIsFormOpen(false);
     } catch {
-      setError("No fue posible guardar la programación.");
+      setError(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar la programación.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -158,7 +160,9 @@ export function ProgramacionManagerModal({
 
       onFichaChange(result.value.data);
     } catch {
-      setError("No fue posible eliminar la programación.");
+      setError(
+        "La solicitud de eliminación no llegó al servidor. Actualiza la página y vuelve a intentarlo.",
+      );
     } finally {
       setDeletingId(null);
     }
@@ -184,7 +188,9 @@ export function ProgramacionManagerModal({
 
       onFichaChange(result.value.data);
     } catch {
-      setError("No fue posible actualizar el estado.");
+      setError(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a seleccionar el estado.",
+      );
     } finally {
       setIsChangingStatus(false);
     }
@@ -240,12 +246,9 @@ export function ProgramacionManagerModal({
           </div>
 
           {error ? (
-            <p
-              className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-              role="alert"
-            >
+            <Alert title="No se pudo actualizar la competencia">
               {error}
-            </p>
+            </Alert>
           ) : null}
 
           <div className="grid gap-4 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-950/60 sm:grid-cols-[1fr_auto_auto] sm:items-end">
@@ -275,13 +278,13 @@ export function ProgramacionManagerModal({
           </div>
 
           {instructores.length === 0 ? (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+            <Alert title="No hay instructores disponibles" variant="warning">
               Debes registrar un instructor activo en{" "}
               <Link className="font-semibold underline" href="/instructores">
                 Instructores
               </Link>{" "}
               antes de crear una programación.
-            </p>
+            </Alert>
           ) : null}
 
           {seguimiento.programaciones.length === 0 ? (

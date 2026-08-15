@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import {
+  Alert,
   Button,
   Card,
   ConfirmDialog,
@@ -81,7 +82,9 @@ export function InstructoresPageContent({
       });
       setErrorMessage(null);
     } catch {
-      setErrorMessage("No fue posible cargar los instructores.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión, actualiza la página e intenta cargar los instructores nuevamente.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +161,9 @@ export function InstructoresPageContent({
       setEditingInstructor(null);
       await refresh(filters);
     } catch {
-      setErrorMessage("No fue posible guardar el instructor.");
+      setErrorMessage(
+        "La solicitud no llegó al servidor. Verifica tu conexión y vuelve a guardar el instructor.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -180,7 +185,9 @@ export function InstructoresPageContent({
       setDeletingInstructor(null);
       await refresh(filters);
     } catch {
-      setErrorMessage("No fue posible eliminar el instructor.");
+      setErrorMessage(
+        "La solicitud de eliminación no llegó al servidor. Actualiza la página y vuelve a intentarlo.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -201,11 +208,9 @@ export function InstructoresPageContent({
       </div>
 
       {errorMessage && !isModalOpen ? (
-        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
-          <p className="text-sm text-red-700 dark:text-red-300" role="alert">
-            {errorMessage}
-          </p>
-        </Card>
+        <Alert title="No se pudo completar la acción">
+          {errorMessage}
+        </Alert>
       ) : null}
 
       <Card title="Buscar">
@@ -257,12 +262,9 @@ export function InstructoresPageContent({
         title={editingInstructor ? "Editar instructor" : "Crear instructor"}
       >
         {errorMessage ? (
-          <p
-            className="mb-5 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300"
-            role="alert"
-          >
+          <Alert className="mb-5" title="No se pudo guardar el instructor">
             {errorMessage}
-          </p>
+          </Alert>
         ) : null}
         <InstructorForm
           errors={formErrors}

@@ -2,7 +2,7 @@
 
 import { useMemo, type FormEvent } from "react";
 
-import { Button, Input, Select } from "@/components/ui";
+import { Alert, Button, Input, Select } from "@/components/ui";
 import type { InstructorDto } from "@/modules/instructores/types";
 
 import { DIA_SEMANA_LABELS } from "../constants";
@@ -171,12 +171,7 @@ export function ProgramacionForm({
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       {error ? (
-        <p
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          role="alert"
-        >
-          {error}
-        </p>
+        <Alert title="No se pudo guardar la programación">{error}</Alert>
       ) : null}
 
       <Select

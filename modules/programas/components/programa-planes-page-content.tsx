@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import {
+  Alert,
   Badge,
   Button,
   Card,
@@ -132,7 +133,9 @@ export function ProgramaPlanesPageContent({
       handleProgramUpdated(result.value.data);
       setDeleteTarget(null);
     } catch {
-      setErrorMessage("No fue posible completar la eliminación.");
+      setErrorMessage(
+        "La solicitud de eliminación no llegó al servidor. Actualiza la página y vuelve a intentarlo.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -171,11 +174,9 @@ export function ProgramaPlanesPageContent({
       </div>
 
       {errorMessage ? (
-        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
+        <Alert title="No se pudo modificar el plan">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-red-700 dark:text-red-300" role="alert">
-              {errorMessage}
-            </p>
+            <p>{errorMessage}</p>
             <Button
               onClick={() => setErrorMessage(null)}
               size="sm"
@@ -184,7 +185,7 @@ export function ProgramaPlanesPageContent({
               Cerrar
             </Button>
           </div>
-        </Card>
+        </Alert>
       ) : null}
 
       {selectedPlan ? (

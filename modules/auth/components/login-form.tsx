@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input } from "@/components/ui";
+import { Alert, Button, Input } from "@/components/ui";
 
 import { loginAction } from "../actions";
 import { useAuthFormState } from "../hooks";
@@ -11,12 +11,7 @@ export function LoginForm() {
   return (
     <form action={action} className="space-y-5">
       {state.message ? (
-        <p
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          role="alert"
-        >
-          {state.message}
-        </p>
+        <Alert title="No se pudo iniciar sesión">{state.message}</Alert>
       ) : null}
       <Input
         autoComplete="email"

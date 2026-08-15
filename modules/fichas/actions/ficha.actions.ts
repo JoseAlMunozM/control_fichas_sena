@@ -5,6 +5,10 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 
 import { requireAuth } from "@/lib/auth/authorization";
+import {
+  getUnexpectedActionMessage,
+  getValidationErrorDetails,
+} from "@/utils/action-errors";
 
 import {
   fichaService,
@@ -41,14 +45,38 @@ function getLeaderIdentity(session: Session) {
   };
 }
 
+const VALIDATION_FIELD_LABELS = {
+  numero: "Número de ficha",
+  programaId: "Programa",
+  planId: "Versión del plan",
+  municipio: "Municipio",
+  sede: "Sede",
+  modalidad: "Modalidad",
+  jornadas: "Jornadas de formación",
+  fechaInicio: "Fecha inicial",
+  fechaFin: "Fecha final",
+  fechaFinLectiva: "Fin de etapa lectiva",
+  fechaFinPractica: "Fin de etapa práctica",
+  instructorId: "Instructor",
+  bloques: "Bloques semanales",
+  estado: "Estado",
+  motivo: "Motivo",
+  fecha: "Fecha de la novedad",
+  tipo: "Tipo de novedad",
+  descripcion: "Descripción",
+} as const;
+
 function mapActionError(error: unknown): FichaActionError {
   if (error instanceof z.ZodError) {
-    const flattened = z.flattenError(error);
+    const details = getValidationErrorDetails(
+      error,
+      "Revisa los datos ingresados y corrige los campos señalados.",
+      VALIDATION_FIELD_LABELS,
+    );
 
     return {
       code: "VALIDATION_ERROR",
-      message: flattened.formErrors[0] ?? "Los datos no son válidos.",
-      fieldErrors: flattened.fieldErrors,
+      ...details,
     };
   }
 
@@ -58,7 +86,10 @@ function mapActionError(error: unknown): FichaActionError {
 
   return {
     code: "INTERNAL_ERROR",
-    message: "No fue posible completar la operación.",
+    message: getUnexpectedActionMessage(
+      error,
+      "Ocurrió un error inesperado al procesar la ficha. Actualiza la página e inténtalo nuevamente.",
+    ),
   };
 }
 

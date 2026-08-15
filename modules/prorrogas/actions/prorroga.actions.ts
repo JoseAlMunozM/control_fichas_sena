@@ -5,6 +5,10 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 
 import { requireAuth } from "@/lib/auth/authorization";
+import {
+  getUnexpectedActionMessage,
+  getValidationErrorDetails,
+} from "@/utils/action-errors";
 
 import {
   prorrogaService,
@@ -32,14 +36,26 @@ function getActor(session: Session) {
   };
 }
 
+const VALIDATION_FIELD_LABELS = {
+  fichaId: "Ficha",
+  fechaFinLectivaNueva: "Nuevo fin de etapa lectiva",
+  fechaFinPracticaNueva: "Nuevo fin de etapa práctica",
+  motivo: "Motivo de la prórroga",
+  estado: "Decisión",
+  observacionRespuesta: "Observación de la decisión",
+} as const;
+
 function mapActionError(error: unknown): ProrrogaActionError {
   if (error instanceof z.ZodError) {
-    const flattened = z.flattenError(error);
+    const details = getValidationErrorDetails(
+      error,
+      "Revisa los datos de la prórroga y corrige los campos señalados.",
+      VALIDATION_FIELD_LABELS,
+    );
 
     return {
       code: "VALIDATION_ERROR",
-      message: flattened.formErrors[0] ?? "Los datos no son válidos.",
-      fieldErrors: flattened.fieldErrors,
+      ...details,
     };
   }
 
@@ -49,7 +65,10 @@ function mapActionError(error: unknown): ProrrogaActionError {
 
   return {
     code: "INTERNAL_ERROR",
-    message: "No fue posible completar la operación.",
+    message: getUnexpectedActionMessage(
+      error,
+      "Ocurrió un error inesperado al procesar la prórroga. Actualiza la página e inténtalo nuevamente.",
+    ),
   };
 }
 

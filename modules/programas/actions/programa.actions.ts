@@ -4,6 +4,10 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
 import { requireAuth } from "@/lib/auth/authorization";
+import {
+  getUnexpectedActionMessage,
+  getValidationErrorDetails,
+} from "@/utils/action-errors";
 
 import { PROGRAMA_ACTION_MESSAGES } from "../constants";
 import {
@@ -36,16 +40,28 @@ function revalidateProgramaPaths(programaId: string): void {
   revalidatePath(`/programas/${programaId}`);
 }
 
+const VALIDATION_FIELD_LABELS = {
+  codigo: "Código",
+  nombre: "Nombre",
+  descripcion: "Descripción",
+  estado: "Estado",
+  version: "Versión",
+  norma: "Norma o descripción",
+  tipo: "Tipo de competencia",
+  horas: "Horas del plan",
+} as const;
+
 function mapActionError(error: unknown): ProgramaActionError {
   if (error instanceof z.ZodError) {
-    const flattenedError = z.flattenError(error);
+    const details = getValidationErrorDetails(
+      error,
+      PROGRAMA_ACTION_MESSAGES.validationError,
+      VALIDATION_FIELD_LABELS,
+    );
 
     return {
       code: "VALIDATION_ERROR",
-      message:
-        flattenedError.formErrors[0] ??
-        PROGRAMA_ACTION_MESSAGES.validationError,
-      fieldErrors: flattenedError.fieldErrors,
+      ...details,
     };
   }
 
@@ -58,7 +74,10 @@ function mapActionError(error: unknown): ProgramaActionError {
 
   return {
     code: "INTERNAL_ERROR",
-    message: PROGRAMA_ACTION_MESSAGES.internalError,
+    message: getUnexpectedActionMessage(
+      error,
+      "Ocurrió un error inesperado al procesar el programa. Actualiza la página e inténtalo nuevamente.",
+    ),
   };
 }
 
