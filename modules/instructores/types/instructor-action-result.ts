@@ -1,6 +1,7 @@
 export type InstructorActionErrorCode =
   | "VALIDATION_ERROR"
   | "DUPLICATE_EMAIL"
+  | "CONTRACT_OVERLAP"
   | "NOT_FOUND"
   | "INTERNAL_ERROR";
 

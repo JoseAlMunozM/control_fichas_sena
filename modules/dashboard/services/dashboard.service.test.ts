@@ -10,6 +10,7 @@ import { prorrogaService } from "@/modules/prorrogas/services";
 import {
   createTestFicha,
   resetServiceStores,
+  TEST_ACTIVE_CONTRACT,
   TEST_LEADER,
 } from "@/tests/helpers/service-fixtures";
 
@@ -31,6 +32,7 @@ describe("DashboardService", () => {
       await instructorService.create({
         nombre: "Instructor Dashboard",
         correo: "dashboard@sena.edu.co",
+        ...TEST_ACTIVE_CONTRACT,
       })
     ).data;
 

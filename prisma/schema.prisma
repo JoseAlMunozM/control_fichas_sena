@@ -137,6 +137,7 @@ model Instructor {
   telefono       String?                   @db.VarChar(30)
   estado         Boolean                   @default(true)
   observaciones  String?                   @db.VarChar(1000)
+  contratos      ContratoInstructor[]
   fichasLider    Ficha[]                   @relation("FichaLiderActual")
   historialLider FichaLiderAsignacion[]    @relation("InstructorLiderHistorial")
   programaciones ProgramacionCompetencia[]
@@ -144,6 +145,20 @@ model Instructor {
   updatedAt      DateTime                  @updatedAt
 
   @@index([estado, nombre])
+}
+
+model ContratoInstructor {
+  id           String     @id @default(uuid()) @db.Uuid
+  instructorId String     @db.Uuid
+  instructor   Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  fechaInicio  DateTime   @db.Date
+  fechaFin     DateTime   @db.Date
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([instructorId, fechaInicio, fechaFin])
+  @@index([instructorId, fechaInicio, fechaFin])
+  @@index([fechaFin])
 }
 
 model Ficha {

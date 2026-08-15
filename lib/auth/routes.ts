@@ -6,11 +6,13 @@ import type { UserRole } from "@/types";
 import { findRouteConfig } from "@/utils";
 
 export function isPublicRoute(pathname: string): boolean {
+  const isCronRoute =
+    pathname === "/api/cron" || pathname.startsWith("/api/cron/");
   const isAuthRoute =
     pathname === AUTH_ROUTES.apiPrefix ||
     pathname.startsWith(`${AUTH_ROUTES.apiPrefix}/`);
 
-  if (isAuthRoute) {
+  if (isAuthRoute || isCronRoute) {
     return true;
   }
 

@@ -4,6 +4,7 @@ import { instructorService } from "@/modules/instructores/services";
 import {
   createTestFicha,
   resetServiceStores,
+  TEST_ACTIVE_CONTRACT,
   TEST_LEADER,
 } from "@/tests/helpers/service-fixtures";
 
@@ -40,6 +41,7 @@ describe("FichaService", () => {
       await instructorService.create({
         nombre: "Instructor Programación",
         correo: "programacion@sena.edu.co",
+        ...TEST_ACTIVE_CONTRACT,
       })
     ).data;
 
@@ -83,6 +85,7 @@ describe("FichaService", () => {
       await instructorService.create({
         nombre: "Instructor Jornada",
         correo: "jornada@sena.edu.co",
+        ...TEST_ACTIVE_CONTRACT,
       })
     ).data;
 
@@ -115,6 +118,7 @@ describe("FichaService", () => {
       await instructorService.create({
         nombre: "Instructor Existente",
         correo: "existente@sena.edu.co",
+        ...TEST_ACTIVE_CONTRACT,
       })
     ).data;
 

@@ -7,6 +7,11 @@ export const TEST_LEADER = {
   correo: "lider.prueba@sena.edu.co",
 } as const;
 
+export const TEST_ACTIVE_CONTRACT = {
+  fechaInicioContrato: "2020-01-01",
+  fechaFinContrato: "2099-12-31",
+} as const;
+
 type TestStores = {
   fichaStore?: unknown;
   instructorStore?: unknown;

@@ -24,6 +24,9 @@ import type {
   InstructoresResponse,
 } from "../types";
 import {
+  InstructorContractModal,
+} from "./instructor-contract-modal";
+import {
   emptyInstructorForm,
   InstructorForm,
   type InstructorFormErrors,
@@ -50,6 +53,8 @@ export function InstructoresPageContent({
   const [editingInstructor, setEditingInstructor] =
     useState<InstructorDto | null>(null);
   const [deletingInstructor, setDeletingInstructor] =
+    useState<InstructorDto | null>(null);
+  const [contractInstructor, setContractInstructor] =
     useState<InstructorDto | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -96,8 +101,9 @@ export function InstructoresPageContent({
       nombre: instructor.nombre,
       correo: instructor.correo,
       telefono: instructor.telefono,
-      estado: instructor.estado,
       observaciones: instructor.observaciones,
+      fechaInicioContrato: "",
+      fechaFinContrato: "",
     });
     setFormErrors({});
     setErrorMessage(null);
@@ -128,7 +134,12 @@ export function InstructoresPageContent({
 
     try {
       const result = editingInstructor
-        ? await updateInstructorAction(editingInstructor.id, formValue)
+        ? await updateInstructorAction(editingInstructor.id, {
+            nombre: formValue.nombre,
+            correo: formValue.correo,
+            telefono: formValue.telefono,
+            observaciones: formValue.observaciones,
+          })
         : await createInstructorAction(formValue);
 
       if (!result.success) {
@@ -183,7 +194,7 @@ export function InstructoresPageContent({
             Instructores
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Administra los instructores disponibles para las programaciones.
+            Administra instructores, contratos y disponibilidad para las programaciones.
           </p>
         </div>
         <Button onClick={openCreate}>Nuevo instructor</Button>
@@ -222,6 +233,7 @@ export function InstructoresPageContent({
           instructores={data.data}
           onDelete={setDeletingInstructor}
           onEdit={openEdit}
+          onManageContracts={setContractInstructor}
         />
       ) : (
         <EmptyState
@@ -254,6 +266,7 @@ export function InstructoresPageContent({
         ) : null}
         <InstructorForm
           errors={formErrors}
+          isEditing={editingInstructor !== null}
           isSubmitting={isSubmitting}
           onCancel={closeModal}
           onChange={updateForm}
@@ -261,6 +274,17 @@ export function InstructoresPageContent({
           value={formValue}
         />
       </Modal>
+
+      {contractInstructor ? (
+        <InstructorContractModal
+          instructor={contractInstructor}
+          onClose={() => setContractInstructor(null)}
+          onSaved={() => {
+            setContractInstructor(null);
+            void refresh(filters);
+          }}
+        />
+      ) : null}
 
       <ConfirmDialog
         confirmLabel="Eliminar instructor"

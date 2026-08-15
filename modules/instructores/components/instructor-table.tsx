@@ -8,12 +8,17 @@ import {
 } from "@/components/ui";
 
 import type { InstructorDto } from "../types";
+import {
+  formatContractDate,
+  getDisplayedContract,
+} from "../utils";
 
 export interface InstructorTableProps {
   instructores: readonly InstructorDto[];
   disabled?: boolean;
   onEdit: (instructor: InstructorDto) => void;
   onDelete: (instructor: InstructorDto) => void;
+  onManageContracts: (instructor: InstructorDto) => void;
 }
 
 export function InstructorTable({
@@ -21,6 +26,7 @@ export function InstructorTable({
   instructores,
   onDelete,
   onEdit,
+  onManageContracts,
 }: InstructorTableProps) {
   const columns: readonly TableColumn<InstructorDto>[] = [
     {
@@ -43,6 +49,28 @@ export function InstructorTable({
       render: (instructor) => instructor.telefono ?? "Sin registrar",
     },
     {
+      id: "contrato",
+      header: "Contrato",
+      render: (instructor) => {
+        const contract = getDisplayedContract(instructor.contratos);
+
+        return contract ? (
+          <div className="space-y-0.5">
+            <p className="font-medium text-zinc-800 dark:text-zinc-200">
+              {formatContractDate(contract.fechaInicio)} –{" "}
+              {formatContractDate(contract.fechaFin)}
+            </p>
+            <p className="text-xs text-zinc-500">
+              {instructor.contratos.length}{" "}
+              {instructor.contratos.length === 1 ? "contrato" : "contratos"}
+            </p>
+          </div>
+        ) : (
+          <span className="text-zinc-500">Sin contrato</span>
+        );
+      },
+    },
+    {
       id: "estado",
       header: "Estado",
       render: (instructor) => (
@@ -58,6 +86,14 @@ export function InstructorTable({
       cellClassName: "whitespace-nowrap text-right",
       render: (instructor) => (
         <div className="flex justify-end gap-2">
+          <Button
+            disabled={disabled}
+            onClick={() => onManageContracts(instructor)}
+            size="sm"
+            variant="secondary"
+          >
+            Contratos
+          </Button>
           <Button
             disabled={disabled}
             onClick={() => onEdit(instructor)}

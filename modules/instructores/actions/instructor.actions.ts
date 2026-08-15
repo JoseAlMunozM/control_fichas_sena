@@ -16,6 +16,7 @@ import type {
   InstructoresResponse,
 } from "../types";
 import {
+  createContratoInstructorSchema,
   createInstructorSchema,
   instructorFiltersSchema,
   instructorIdSchema,
@@ -86,6 +87,24 @@ export async function updateInstructorAction(
       updateInstructorSchema.parse(dataInput),
     );
     revalidatePath("/instructores");
+
+    return response;
+  });
+}
+
+export async function addInstructorContractAction(
+  instructorIdInput: unknown,
+  dataInput: unknown,
+): Promise<InstructorActionResult<InstructorResponse>> {
+  return execute(async () => {
+    const response = await instructorService.addContract(
+      instructorIdSchema.parse(instructorIdInput),
+      createContratoInstructorSchema.parse(dataInput),
+    );
+
+    revalidatePath("/instructores");
+    revalidatePath("/fichas");
+    revalidatePath("/dashboard");
 
     return response;
   });

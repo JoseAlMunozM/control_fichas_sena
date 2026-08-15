@@ -5,15 +5,12 @@ import type { FormEventHandler } from "react";
 import {
   Button,
   Input,
-  Select,
   Textarea,
 } from "@/components/ui";
 
 import type { CreateInstructorDto } from "../types";
 
-export interface InstructorFormValue extends CreateInstructorDto {
-  estado: boolean;
-}
+export type InstructorFormValue = CreateInstructorDto;
 
 export type InstructorFormErrors = Partial<
   Record<keyof InstructorFormValue, string>
@@ -23,14 +20,16 @@ export const emptyInstructorForm: InstructorFormValue = {
   nombre: "",
   correo: "",
   telefono: "",
-  estado: true,
   observaciones: "",
+  fechaInicioContrato: "",
+  fechaFinContrato: "",
 };
 
 export interface InstructorFormProps {
   value: InstructorFormValue;
   errors?: InstructorFormErrors;
   isSubmitting?: boolean;
+  isEditing?: boolean;
   onChange: <Key extends keyof InstructorFormValue>(
     field: Key,
     value: InstructorFormValue[Key],
@@ -39,14 +38,10 @@ export interface InstructorFormProps {
   onSubmit: FormEventHandler<HTMLFormElement>;
 }
 
-const statusOptions = [
-  { label: "Activo", value: "true" },
-  { label: "Inactivo", value: "false" },
-] as const;
-
 export function InstructorForm({
   errors = {},
   isSubmitting = false,
+  isEditing = false,
   onCancel,
   onChange,
   onSubmit,
@@ -80,16 +75,32 @@ export function InstructorForm({
           value={value.telefono ?? ""}
         />
       </div>
-      <Select
-        disabled={isSubmitting}
-        error={errors.estado}
-        label="Estado"
-        onChange={(event) =>
-          onChange("estado", event.target.value === "true")
-        }
-        options={statusOptions}
-        value={String(value.estado)}
-      />
+      {!isEditing ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            disabled={isSubmitting}
+            error={errors.fechaInicioContrato}
+            label="Inicio del contrato"
+            onChange={(event) =>
+              onChange("fechaInicioContrato", event.target.value)
+            }
+            required
+            type="date"
+            value={value.fechaInicioContrato}
+          />
+          <Input
+            disabled={isSubmitting}
+            error={errors.fechaFinContrato}
+            label="Finalización del contrato"
+            onChange={(event) =>
+              onChange("fechaFinContrato", event.target.value)
+            }
+            required
+            type="date"
+            value={value.fechaFinContrato}
+          />
+        </div>
+      ) : null}
       <Textarea
         disabled={isSubmitting}
         error={errors.observaciones}

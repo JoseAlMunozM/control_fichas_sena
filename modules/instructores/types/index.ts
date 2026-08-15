@@ -1,3 +1,5 @@
+export * from "./contrato-instructor.dto";
+export * from "./contrato-instructor.entity";
 export * from "./instructor-action-result";
 export * from "./instructor.dto";
 export * from "./instructor.entity";

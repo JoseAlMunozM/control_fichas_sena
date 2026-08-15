@@ -26,7 +26,7 @@ El sistema reemplaza el seguimiento manual realizado en hojas de cálculo por un
 - Inicio de sesión mediante correo institucional y contraseña.
 - Creación segura de la primera cuenta del instructor líder.
 - Administración de programas, versiones de planes y competencias.
-- Administración de instructores activos e inactivos.
+- Administración de instructores, contratos y renovaciones.
 - Creación y seguimiento de fichas de formación.
 - Asignación histórica del instructor líder de cada ficha.
 - Programación de competencias por instructor, fechas y bloques semanales.
@@ -146,6 +146,7 @@ DATABASE_URL="postgresql://postgres:CONTRASENA@localhost:5432/control_fichas?sch
 AUTH_SECRET="SECRETO_ALEATORIO_SEGURO"
 AUTH_TRUST_HOST="true"
 DEV_AUTH_BYPASS="false"
+CRON_SECRET="OTRO_SECRETO_ALEATORIO_SEGURO"
 ```
 
 Si PostgreSQL utiliza otro puerto, reemplácelo en `DATABASE_URL`. Por ejemplo, una instalación local en el puerto 5433 usaría:
@@ -272,7 +273,7 @@ Las competencias pueden agregarse, editarse, eliminarse y ordenarse mientras el 
 
 ### Instructores
 
-La vista **Instructores** permite crear, buscar, editar, activar e inactivar instructores.
+La vista **Instructores** permite crear, buscar y editar instructores, además de administrar su histórico de contratos.
 
 Datos disponibles:
 
@@ -281,8 +282,13 @@ Datos disponibles:
 - Teléfono opcional.
 - Estado.
 - Observaciones.
+- Fecha inicial y final del contrato.
 
-Solo los instructores activos pueden seleccionarse para nuevas asignaciones. Inactivar un instructor no elimina su participación histórica.
+El estado solo puede ser **Activo** o **Inactivo** y se calcula automáticamente con las fechas de sus contratos. La fecha final es inclusiva: el instructor pasa a inactivo al día siguiente si no tiene otra renovación vigente.
+
+Cada renovación se registra como un contrato nuevo. Las fechas de dos contratos del mismo instructor no pueden superponerse y los contratos anteriores permanecen disponibles como histórico.
+
+Solo los instructores activos pueden seleccionarse para nuevas asignaciones. Cuando un contrato vence, no se eliminan fichas, programaciones ni participaciones históricas.
 
 ### Fichas
 
@@ -544,6 +550,7 @@ DATABASE_URL="CONEXION_DE_NEON"
 AUTH_SECRET="SECRETO_ALEATORIO_SEGURO"
 AUTH_TRUST_HOST="true"
 DEV_AUTH_BYPASS="false"
+CRON_SECRET="OTRO_SECRETO_ALEATORIO_SEGURO"
 ```
 
 No reutilice un secreto publicado ni copie el archivo `.env` al repositorio.
@@ -559,6 +566,8 @@ next build
 ```
 
 Después del primer despliegue, visite la URL pública. Si la base está vacía, aparecerá la pantalla de configuración inicial.
+
+Vercel ejecuta diariamente `/api/cron/instructores` para actualizar los estados por vencimiento. Configure `CRON_SECRET` con un valor aleatorio de al menos 16 caracteres; Vercel lo enviará automáticamente al endpoint mediante el encabezado de autorización.
 
 > Evite conectar despliegues Preview a la base de producción. Use otra rama o base de Neon para pruebas cuando sea necesario.
 
@@ -624,6 +633,7 @@ Ejecute los comandos desde la carpeta raíz del repositorio, donde se encuentran
 - Mantenga `DEV_AUTH_BYPASS=false`, especialmente en producción.
 - Use contraseñas únicas y seguras.
 - Genere un `AUTH_SECRET` diferente por entorno.
+- Genere un `CRON_SECRET` diferente y no invoque públicamente la tarea programada.
 - Limite el acceso al proyecto de Neon y a las variables de Vercel.
 - Realice copias de seguridad periódicas de la base de datos.
 - Cierre la sesión al utilizar equipos compartidos.
